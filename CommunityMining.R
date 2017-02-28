@@ -2,7 +2,7 @@ library("gplots", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resource
 library("RColorBrewer", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
 library("WGCNA", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
 library("igraph", lib.loc="/Library/Frameworks/R.framework/Versions/3.3/Resources/library")
-setwd('/Users/zhangchi/Desktop/cs690/Project')
+setwd('/Users/zhangchi/Desktop/cs690/CommunityMining')
 AM = as.matrix(read.csv("FinalAdjacencyMatrix.csv",sep=",", header=TRUE, row.names=1)) # sent emails
 AMlist = read.csv("FinalAdjacencyMatrix.csv",sep=",", header=TRUE, row.names=1) # sent emails as list
 # employee information might be interesting to analyze for considering relationships # within the company
