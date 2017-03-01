@@ -30,7 +30,26 @@ def findUnvisitedNeighbors(G,cur):
         if G.node[node]['visit'] == False:
             neighbors.append(node)
     return neighbors
+
+def ML_Paths(G,index):
+    for node in G.node:
+        G.node[node]['visit'] = False
+        G.node[node]['path_probs'] = 0
+        G.node[node]['previous'] = -1
     
+    G.node[index]['path_probs'] = 1
+    
+    while len(findUnvisitedNode(G)) > 0:
+        unvistedNode = findUnvisitedNode(G)
+        cur = findPathProbMaxNode(G,unvistedNode)
+        neighbors = findUnvisitedNeighbors(G,cur)
+        for o in neighbors:
+            if G.node[cur]['path_probs'] * G.edge[cur][o]['weight'] > G.node[o]['path_probs']:
+                G.node[o]['path_probs'] = G.node[cur]['path_probs'] * G.edge[cur][o]['weight']
+                G.node[o]['previous'] = cur
+        G.node[cur]['visit'] = True
+    return G
+
 G = nx.Graph()
 G.add_edge('a','c',weight=0.95)
 G.add_edge('c','d',weight=0.95)
@@ -41,20 +60,4 @@ G.add_edge('c','e',weight=0.65)
 G.add_edge('d','e',weight=0.8)
 G.add_edge('c','f',weight=0.8)
 G.add_edge('d','f',weight=0.8)
-
-for node in G.node:
-    G.node[node]['visit'] = False
-    G.node[node]['path_probs'] = 0
-    G.node[node]['previous'] = -1
-
-G.node['a']['path_probs'] = 1
-
-while len(findUnvisitedNode(G)) > 0:
-    unvistedNode = findUnvisitedNode(G)
-    cur = findPathProbMaxNode(G,unvistedNode)
-    neighbors = findUnvisitedNeighbors(G,cur)
-    for o in neighbors:
-        if G.node[cur]['path_probs'] * G.edge[cur][o]['weight'] > G.node[o]['path_probs']:
-            G.node[o]['path_probs'] = G.node[cur]['path_probs'] * G.edge[cur][o]['weight']
-            G.node[o]['previous'] = cur
-    G.node[cur]['visit'] = True
+G = ML_Paths(G,'a')
