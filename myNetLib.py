@@ -35,4 +35,29 @@ G=readnet('enronData.txt')
 nx.draw(G)
 x = nx.degree_centrality(G)
 sorted_x = sorted(x.items(), key=operator.itemgetter(1))
+print G[1]
+print len(G[1])
+
+
+
+'''
+# check result
+a=open('enronData.txt')
+result = []
+for line in a:
+    if int(line.split()[0]) == 1:
+        if line.split()[1] not in result:
+            result.append(line.split()[1])
+    if int(line.split()[1]) == 1:
+        if line.split()[0] not in result:
+            result.append(line.split()[1])
+
+
+import pandas as pd
+import numpy as np
+inputFile = pd.read_csv("FinalAdjacencyMatrix.csv").drop(['name'],axis=1)
+inputFileNumpy = np.array(inputFile.as_matrix(),dtype=np.int)
+for i in range(30):
+    print np.sum(inputFileNumpy[:,i])+np.sum(inputFileNumpy[i,1:])
+'''
     
