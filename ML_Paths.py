@@ -36,7 +36,7 @@ def ML_Paths(G,index):
         G.node[node]['visit'] = False
         G.node[node]['path_probs'] = 0
         G.node[node]['previous'] = []
-        G.node[node]['sigma'] = 0.001
+        G.node[node]['sigma'] = 0
     
     G.node[index]['path_probs'] = 1
     G.node[index]['sigma'] = 1
@@ -46,13 +46,14 @@ def ML_Paths(G,index):
         cur = findPathProbMaxNode(G,unvistedNode)
         neighbors = findUnvisitedNeighbors(G,cur)
         sigmav = G.node[cur]['sigma']
-        S.append(cur)
+        if G.node[cur]['path_probs'] > 0:
+            S.append(cur)
         for o in neighbors:
             if G.node[cur]['path_probs'] * G.edge[cur][o]['weight'] > G.node[o]['path_probs']:
                 G.node[o]['path_probs'] = G.node[cur]['path_probs'] * G.edge[cur][o]['weight']
                 G.node[o]['previous'] = [cur]
                 G.node[o]['sigma'] = sigmav
-            elif G.node[cur]['path_probs'] * G.edge[cur][o]['weight'] == G.node[o]['path_probs']:
+            elif G.node[cur]['path_probs'] * G.edge[cur][o]['weight'] == G.node[o]['path_probs'] !=0:
                 G.node[o]['previous'].append(cur)
                 G.node[o]['sigma'] += sigmav
         G.node[cur]['visit'] = True
@@ -82,6 +83,16 @@ def betweenness_centrality(G):
 
 def main():    
     G = nx.Graph()
+    
+    G.add_edge('a','b',weight=0.8)
+    G.add_edge('b','c',weight=0.8)
+    G.add_edge('b','d',weight=0.8)
+    G.add_edge('d','c',weight=0.8)
+    G.add_edge('e','f',weight=0.8)
+    G.add_edge('f','h',weight=0.8)
+    G.add_edge('e','g',weight=0.8)
+    G.add_edge('g','h',weight=0.8)
+    '''
     G.add_edge('a','c',weight=0.8)
     G.add_edge('c','d',weight=0.8)
     G.add_edge('b','d',weight=0.8)
@@ -101,11 +112,13 @@ def main():
     G.add_edge('h','j',weight=0.8)
     G.add_edge('b','k',weight=0.8)
     G.add_edge('k','i',weight=0.8)
-    
+    '''
     G, S = ML_Paths(G,'a')
-    for i in G:
-        print i+": " + str(G.node[i]['sigma'])
+    #for i in G:
+    #    print i+": " + str(G.node[i]['sigma'])
     print betweenness_centrality(G)
+    return G, S
+G, S1 = main()
 
 '''
 betweenness = dict.fromkeys(G, 0.0)
