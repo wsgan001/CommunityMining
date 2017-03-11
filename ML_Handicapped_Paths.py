@@ -45,7 +45,7 @@ def ML_Handicapped_Paths(G,index,beta):
         G.node[node]['visit'] = False
         G.node[node]['path_probs'] = 0
         G.node[node]['previous'] = []
-        G.node[node]['sigma'] = 0.001
+        G.node[node]['sigma'] = 0
         G.node[node]['posterior_probs'] = 0
         G.node[node]['path_length'] = 0
     
@@ -58,7 +58,8 @@ def ML_Handicapped_Paths(G,index,beta):
         cur = findPosteriorProbMaxNode(G,unvistedNode)
         neighbors = findUnvisitedNeighbors(G,cur)
         sigmav = G.node[cur]['sigma']
-        S.append(cur)
+        if G.node[cur]['path_probs'] > 0:
+            S.append(cur)
         for o in neighbors:
             p_prob = G.node[cur]['path_probs'] * G.edge[cur][o]['weight']
             p_length = G.node[cur]['path_length'] + 1
@@ -69,7 +70,7 @@ def ML_Handicapped_Paths(G,index,beta):
                 G.node[o]['posterior_probs'] = p_post
                 G.node[o]['previous'] = [cur]
                 G.node[o]['sigma'] = sigmav
-            elif p_post == G.node[o]['posterior_probs']:
+            elif p_post == G.node[o]['posterior_probs'] !=0:
                 G.node[o]['previous'].append(cur)
                 G.node[o]['sigma'] += sigmav
         G.node[cur]['visit'] = True
@@ -89,7 +90,7 @@ def accumulate_basic(betweenness, S, P, sigma, s):
 def betweenness_centrality(G):
     betweenness = dict.fromkeys(G, 0.0)  # b[v]=0 for v in G
     for s in G:
-        G, S = ML_Handicapped_Paths(G,s,0.3)
+        G, S = ML_Handicapped_Paths(G,s,1)
         #S = G.nodes()
         P = {o:G.node[o]['previous'] for o in G.nodes()}
         sigma = {o:G.node[o]['sigma'] for o in G.nodes()}
@@ -143,5 +144,5 @@ def main():
     print betweenness_centrality(G)
     '''
     
-#G, S = main()
+G, S = main()
     
