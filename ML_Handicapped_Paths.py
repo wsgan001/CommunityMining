@@ -50,6 +50,7 @@ def ML_Handicapped_Paths(G,index,beta):
         G.node[node]['path_length'] = 0
     
     G.node[index]['path_probs'] = 1
+    G.node[index]['posterior_probs'] = 1 #did not show up in paper
     G.node[index]['sigma'] = 1
     S = []
     while len(findUnvisitedNode(G)) > 0:
@@ -69,11 +70,8 @@ def ML_Handicapped_Paths(G,index,beta):
                 G.node[o]['previous'] = [cur]
                 G.node[o]['sigma'] = sigmav
             elif p_post == G.node[o]['posterior_probs']:
-                G.node[o]['path_probs'] = p_prob
-                G.node[o]['path_length'] = p_length
-                G.node[o]['posterior_probs'] = p_post
                 G.node[o]['previous'].append(cur)
-                G.node[o]['sigma'] = sigmav
+                G.node[o]['sigma'] += sigmav
         G.node[cur]['visit'] = True
     return G, S
 
@@ -101,6 +99,7 @@ def betweenness_centrality(G):
     
 def main():
     G = nx.Graph()
+    '''
     G.add_edge('a','c',weight=0.95)
     G.add_edge('c','d',weight=0.95)
     G.add_edge('b','d',weight=0.8)
@@ -110,5 +109,39 @@ def main():
     G.add_edge('d','e',weight=0.8)
     G.add_edge('c','f',weight=0.8)
     G.add_edge('d','f',weight=0.8)
-    G = ML_Handicapped_Paths(G,'a',0.5)
+    
+    G, _ = ML_Handicapped_Paths(G,'a',1)
     print G.node
+    return G
+    '''
+    G.add_edge('a','c',weight=0.8)
+    G.add_edge('c','d',weight=0.8)
+    G.add_edge('b','d',weight=0.8)
+    G.add_edge('a','d',weight=0.8)
+    G.add_edge('b','c',weight=0.8)
+    G.add_edge('c','e',weight=0.8)
+    G.add_edge('d','e',weight=0.8)
+    G.add_edge('c','f',weight=0.8)
+    G.add_edge('d','f',weight=0.8)
+    G.add_edge('e','f',weight=0.8)
+    G.add_edge('e','g',weight=0.8)
+    G.add_edge('e','h',weight=0.8)
+    G.add_edge('f','g',weight=0.8)
+    G.add_edge('f','h',weight=0.8)
+    G.add_edge('g','i',weight=0.8)
+    G.add_edge('h','i',weight=0.8)
+    G.add_edge('h','j',weight=0.8)
+    G.add_edge('b','k',weight=0.8)
+    G.add_edge('k','i',weight=0.8)
+    
+    G, S = ML_Handicapped_Paths(G,'a',1)
+    print betweenness_centrality(G)
+    return G, S
+    '''
+    for i in G:
+        print i+": " + str(G.node[i]['sigma'])
+    print betweenness_centrality(G)
+    '''
+    
+#G, S = main()
+    
