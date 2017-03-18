@@ -33,7 +33,7 @@ def readNet(input_file, now, sep_char=' '):
 '''
 def readNet(input_file, now, sep_char=' '): 
     num_lines = 0
-    G = nx.Graph()
+    G = nx.DiGraph()
     for line in open(input_file):
         num_lines += 1
         line = line.rstrip().split(sep_char)
@@ -118,6 +118,7 @@ def mainCitation():
         G = updateWeight(G, 757382400+31622400*i)
         print "update weight finish"
         x = nx.betweenness_centrality(G,weight = 'weight')
+        #x = nx.closeness_centrality(G,distance = 'weight')
         #x = betweenness_centrality(G)
         #x = closeness_centrality(G)
         print "finish betweenness calculation"
