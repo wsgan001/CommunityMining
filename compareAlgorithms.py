@@ -50,20 +50,17 @@ def updateWeight(G, now):
         timeList = G[nodeA][nodeB]['time']
         G[nodeA][nodeB]['weight'] = getWeight(timeList,now)
     return G
-
-def findRank(sorted_x, number):
-    length = len(sorted_x)
-    count = 0
-    for item in sorted_x:
-        count = count + 1
-        if item[0] == number:
-            #return length-count
-            return int(151.*(length-count)/length)
-    #return length
-    return 151
+    
+def sampleGraph(G):
+    newG = nx.Graph()
+    for nodeA, nodeB in G.edges():
+        probability = G[nodeA][nodeB]['weight']
+        if np.random.choice([1,0], p=[probability,1-probability]) == 1:
+            newG.add_edge(nodeA, nodeB)
+    return newG
 
 result = []
-i = 67
+i = 58
 G=readNet('resultFullData.txt',927590400+1209600*i)
 #nx.draw(G)
 G = updateWeight(G, 927590400+1209600*i)
@@ -80,9 +77,38 @@ for key in sorted_x:
 plt.show()
 print difference
 
+G = updateWeight(G, 927590400+1209600*i)
+result = None
+for i in range(200):
+    print i
+    newG = sampleGraph(G)
+    z = nx.betweenness_centrality(newG)
+    #sorted_z = {key: rank for rank, key in enumerate(sorted(z, key=z.get, reverse=True), 1)}
+    sorted_z = z
+    if result is None:
+        result = sorted_z
+    else:
+        for item in result:
+            if item in sorted_z:
+                result[item] = result[item] + sorted_z[item]
+        for item in sorted_z:
+            if item not in result:
+                result[item] = sorted_z[item]
+sorted_z = {key: rank for rank, key in enumerate(sorted(result, key=result.get, reverse=True), 1)}
+
+for key in sorted_y:
+    if key in sorted_z:
+        plt.scatter(sorted_z[key], sorted_y[key])
+plt.show()
+
+for key in sorted_x:
+    if key in sorted_z:
+        plt.scatter(sorted_z[key], sorted_x[key])
+plt.show()
+
+    
 '''
 G = nx.Graph()
-
 G.add_edge('a','c',weight=0.6)
 G.add_edge('c','d',weight=0.8)
 G.add_edge('b','d',weight=0.9)
