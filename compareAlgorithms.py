@@ -14,7 +14,15 @@ import numpy as np
 
 def changeWeight(G):
     for nodeA, nodeB in G.edges():
+        #if G[nodeA][nodeB]['weight'] <= 0.2:
+         #   G[nodeA][nodeB]['weight'] = 1000
+        #else:
+         #   G[nodeA][nodeB]['weight'] = 1.0 / G[nodeA][nodeB]['weight']
         G[nodeA][nodeB]['weight'] = 1.0 / G[nodeA][nodeB]['weight']
+        #G[nodeA][nodeB]['weight'] = np.tan(np.pi*(1-G[nodeA][nodeB]['weight']))+1
+        #G[nodeA][nodeB]['weight'] = 1.0 / np.exp(G[nodeA][nodeB]['weight'])
+        #G[nodeA][nodeB]['weight'] = np.exp(-G[nodeA][nodeB]['weight'])
+        #G[nodeA][nodeB]['weight'] = 1.0 / G[nodeA][nodeB]['weight'] -np.log( G[nodeA][nodeB]['weight'])
         #G[nodeA][nodeB]['weight'] = -np.log( G[nodeA][nodeB]['weight'])
     return G
 
@@ -51,8 +59,18 @@ def updateWeight(G, now):
         G[nodeA][nodeB]['weight'] = getWeight(timeList,now)
     return G
     
+def sampleGraphOld(G):
+    newG = nx.Graph()
+    for nodeA, nodeB in G.edges():
+        probability = G[nodeA][nodeB]['weight']
+        if np.random.choice([1,0], p=[probability,1-probability]) == 1:
+            newG.add_edge(nodeA, nodeB)
+    return newG
+    
 def sampleGraph(G):
     newG = nx.Graph()
+    for node in G.nodes():
+        newG.add_node(node)
     for nodeA, nodeB in G.edges():
         probability = G[nodeA][nodeB]['weight']
         if np.random.choice([1,0], p=[probability,1-probability]) == 1:
@@ -67,6 +85,7 @@ G = updateWeight(G, 927590400+1209600*i)
 
 x = betweenness_centrality(G)
 sorted_x = {key: rank for rank, key in enumerate(sorted(x, key=x.get, reverse=True), 1)}
+
 G = changeWeight(G)
 y = nx.betweenness_centrality(G,weight = 'weight')
 sorted_y = {key: rank for rank, key in enumerate(sorted(y, key=y.get, reverse=True), 1)}
@@ -79,32 +98,42 @@ print difference
 
 G = updateWeight(G, 927590400+1209600*i)
 result = None
-for i in range(200):
+for i in range(500):
     print i
     newG = sampleGraph(G)
     z = nx.betweenness_centrality(newG)
-    #sorted_z = {key: rank for rank, key in enumerate(sorted(z, key=z.get, reverse=True), 1)}
-    sorted_z = z
+    sorted_z = {key: rank for rank, key in enumerate(sorted(z, key=z.get, reverse=True), 1)}
+    #sorted_z = z
     if result is None:
         result = sorted_z
     else:
+        for item in result:
+            result[item] = result[item] + sorted_z[item]
+        '''
         for item in result:
             if item in sorted_z:
                 result[item] = result[item] + sorted_z[item]
         for item in sorted_z:
             if item not in result:
                 result[item] = sorted_z[item]
-sorted_z = {key: rank for rank, key in enumerate(sorted(result, key=result.get, reverse=True), 1)}
+        '''
+sorted_z = {key: rank for rank, key in enumerate(sorted(result, key=result.get, reverse=False), 1)}
 
+differenceA = 0
 for key in sorted_y:
     if key in sorted_z:
         plt.scatter(sorted_z[key], sorted_y[key])
+        differenceA = differenceA + abs(sorted_z[key] - sorted_y[key])
 plt.show()
+print differenceA
 
+differenceB = 0
 for key in sorted_x:
     if key in sorted_z:
         plt.scatter(sorted_z[key], sorted_x[key])
+        differenceB = differenceB + abs(sorted_z[key] - sorted_x[key])
 plt.show()
+print differenceB
 
     
 '''
