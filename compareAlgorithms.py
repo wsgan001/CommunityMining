@@ -10,6 +10,7 @@ import networkx as nx
 from ML_Handicapped_Paths import betweenness_centrality
 import matplotlib.pyplot as plt
 import numpy as np
+from closeness import closeness_centrality
 #from ML_Paths import betweenness_centrality
 
 def changeWeight(G):
@@ -77,17 +78,32 @@ def sampleGraph(G):
             newG.add_edge(nodeA, nodeB)
     return newG
 
+def generateProbabilisticGraph(nodeNumber, edgeNumber):
+    G = nx.Graph()
+    for i in range(nodeNumber):
+        G.add_node(i)
+    for _ in range(edgeNumber):
+        nodeA = np.random.randint(nodeNumber)
+        nodeB = np.random.randint(nodeNumber)
+        while G.has_edge(nodeA,nodeB):
+            nodeA = np.random.randint(nodeNumber)
+            nodeB = np.random.randint(nodeNumber)
+        G.add_edge(nodeA,nodeB,weight=-np.random.uniform()+1)
+    return G
+    
 result = []
 i = 58
 G=readNet('resultFullData.txt',927590400+1209600*i)
-#nx.draw(G)
 G = updateWeight(G, 927590400+1209600*i)
+#G = generateProbabilisticGraph(200,10000)
 
 x = betweenness_centrality(G)
+#x = closeness_centrality(G)
 sorted_x = {key: rank for rank, key in enumerate(sorted(x, key=x.get, reverse=True), 1)}
 
 G = changeWeight(G)
 y = nx.betweenness_centrality(G,weight = 'weight')
+#y = nx.closeness_centrality(G,distance = 'weight')
 sorted_y = {key: rank for rank, key in enumerate(sorted(y, key=y.get, reverse=True), 1)}
 difference = 0
 for key in sorted_x:
@@ -97,11 +113,13 @@ plt.show()
 print difference
 
 G = updateWeight(G, 927590400+1209600*i)
+#G = changeWeight(G)
 result = None
-for i in range(500):
+for i in range(100):
     print i
     newG = sampleGraph(G)
     z = nx.betweenness_centrality(newG)
+    #z = nx.closeness_centrality(newG,distance = 'weight')
     sorted_z = {key: rank for rank, key in enumerate(sorted(z, key=z.get, reverse=True), 1)}
     #sorted_z = z
     if result is None:
