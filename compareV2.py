@@ -55,7 +55,7 @@ sorted_x = {key: rank for rank, key in enumerate(sorted(x, key=x.get, reverse=Tr
 
 G = changeWeight(G)
 #y = nx.betweenness_centrality(G,weight = 'newWeight')
-y = nx.closeness_centrality(G,distance = 'weight')
+y = nx.closeness_centrality(G,distance = 'newWeight')
 sorted_y = {key: rank for rank, key in enumerate(sorted(y, key=y.get, reverse=True), 1)}
 
 difference = 0
