@@ -35,31 +35,37 @@ def sampleGraph(G):
 
 G = generateProbabilisticGraph()
 G = changeWeight(G)
+nodes = G.nodes()[:1]
+
+# Generate Ground Truth
+dictionary = {}
+t = 10
+topKListSampleResult = {}
+for node in nodes:
+    print node
+    dictionary[node] = {}
+    for i in range(100):
+        newG = sampleGraph(G)
+        distanceSample = nx.single_source_dijkstra_path_length(newG,node,weight='length')
+        topKListSample = sorted(distanceSample,key=distanceSample.get)[1:t+1]
+        for item in topKListSample:
+            if item in dictionary[node]:
+                dictionary[node][item] += 1
+            else:
+                dictionary[node][item] = 1
+    topKListSampleResult[node] = sorted(dictionary[node],key=dictionary[node].get,reverse=True)[1:t+1]
+
 for k in range(1,31):
     print k
     falsePositiveRateList = []
     truePositiveRateList = []
-    for node in G.node:
-        #node = 1
+    for node in nodes:
         print node
         distance = nx.single_source_dijkstra_path_length(G,node,weight='newWeight')
         topKList = sorted(distance,key=distance.get)[1:k+1]
-        
-        dictionary = {}
-        t = 10
-        for i in range(100):
-            newG = sampleGraph(G)
-            distanceSample = nx.single_source_dijkstra_path_length(newG,node,weight='length')
-            topKListSample = sorted(distanceSample,key=distanceSample.get)[1:t+1]
-            for item in topKListSample:
-                if item in dictionary:
-                    dictionary[item] += 1
-                else:
-                    dictionary[item] = 1
-        topKListSampleResult = sorted(dictionary,key=dictionary.get,reverse=True)[1:t+1]
     
         count = 0
-        for item in topKListSampleResult:
+        for item in topKListSampleResult[node]:
             if item in topKList:
                 count += 1
         falsePositiveRateTemp = (k - count) * 1.0 / (160 - t)
