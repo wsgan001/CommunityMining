@@ -17,4 +17,10 @@ for line in inputFile:
         dictionary[dateNumber].append(line[1])
     else:
         dictionary[dateNumber] = [line[1]]
-    
+
+sorted_dictionary = sorted(dictionary.items())
+for item in sorted_dictionary:
+    date = item[0]
+    papers = item[1]
+    for paper in papers:
+        print str(date) + ': ' + paper
