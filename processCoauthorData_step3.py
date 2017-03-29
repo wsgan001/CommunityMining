@@ -44,29 +44,33 @@ for nodeA, nodeB in G.edges():
     
 nodeNumber = len(G.nodes())
     
-falsePositiveRateList = []
-truePositiveRateList = []
+TPList = []
+FPList = []
+conditionPositiveList = []
+conditionNegativeList = []
 nodeCount = 0
 for node in G.nodes():
     nodeCount += 1
     if nodeCount % 1000 == 0:
         print nodeCount
+    distance = nx.single_source_dijkstra_path_length(G,node,cutoff=10,weight='weight')
+    topKList = sorted(distance,key=distance.get)[1:]
     if newG.has_node(node):
-        distance = nx.single_source_dijkstra_path_length(G,node,cutoff=5,weight='weight')
-        topKList = sorted(distance,key=distance.get)[1:]
         groundTruth = newG[node].keys()
-        groundTruthLength = len(groundTruth)
-        count = 0
-        for item in groundTruth:
-            if item in topKList:
-                count += 1
-        falsePositiveRateTemp = (len(topKList) - count) * 1.0 / (nodeNumber - groundTruthLength)
-        truePositiveRateTemp = count * 1.0 / groundTruthLength
-        falsePositiveRateList.append(falsePositiveRateTemp)
-        truePositiveRateList.append(truePositiveRateTemp)
+    else:
+        groundTruth = []
+    groundTruthLength = len(groundTruth)
+    count = 0
+    for item in groundTruth:
+        if item in topKList:
+            count += 1
+    TPList.append(count)
+    FPList.append(len(topKList) - count)
+    conditionPositiveList.append(groundTruthLength)
+    conditionNegativeList.append(nodeNumber - groundTruthLength)
 # ------ #
-falsePositiveRate = np.average(falsePositiveRateList)
-truePositiveRate = np.average(truePositiveRateList)
+truePositiveRate = np.sum(TPList) * 1.0 / np.sum(conditionPositiveList)
+falsePositiveRate = np.sum(FPList) * 1.0 / np.sum(conditionNegativeList)
 print str(falsePositiveRate) + '  '+ str(truePositiveRate)
 plt.scatter(falsePositiveRate, truePositiveRate)    
     
