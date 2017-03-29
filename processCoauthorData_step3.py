@@ -11,6 +11,8 @@ import numpy as np
 inputFile = open('coauthorData_multiAuthor_step2.txt','r')
 
 G = nx.Graph()
+newG = nx.Graph()
+authorList = []
 
 for line in inputFile:
     line = line.strip().split(": ")
@@ -19,12 +21,21 @@ for line in inputFile:
     #print time
     if 20020101 <= time < 20050101:
         for i in range(len(authors)):
+            authorList.append(authors[i])
             for j in range(i+1,len(authors)):
                 #print authors[i] + '/////' + authors[j]
                 if G.has_edge(authors[i],authors[j]):
                     G[authors[i]][authors[j]]['count'] += 1
                 else:
                     G.add_edge(authors[i],authors[j],count=1)
+    elif 20050101 <= time < 20060101:
+        newAuthors = []
+        for author in authors:
+            if author in authorList:
+                newAuthors.append(author)
+        for i in range(len(newAuthors)):
+            for j in range(i+1,len(newAuthors)):
+                newG.add_edge(newAuthors[i],newAuthors[j])
                     
 for nodeA, nodeB in G.edges():
     G[nodeA][nodeB]['prob'] = 1 - np.exp(-0.5 * G[nodeA][nodeB]['count'])
