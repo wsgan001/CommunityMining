@@ -7,6 +7,7 @@ Created on Tue Mar 28 16:33:17 2017
 """
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 
 inputFile = open('coauthorData_multiAuthor_step2.txt','r')
 
@@ -40,6 +41,36 @@ for line in inputFile:
 for nodeA, nodeB in G.edges():
     G[nodeA][nodeB]['prob'] = 1 - np.exp(-0.5 * G[nodeA][nodeB]['count'])
     G[nodeA][nodeB]['weight'] = 1 / (G[nodeA][nodeB]['prob']**0.4)
+    
+nodeNumber = len(G.nodes())
+    
+falsePositiveRateList = []
+truePositiveRateList = []
+nodeCount = 0
+for node in G.nodes():
+    nodeCount += 1
+    if nodeCount % 1000 == 0:
+        print nodeCount
+    if newG.has_node(node):
+        distance = nx.single_source_dijkstra_path_length(G,node,cutoff=5,weight='weight')
+        topKList = sorted(distance,key=distance.get)[1:]
+        groundTruth = newG[node].keys()
+        groundTruthLength = len(groundTruth)
+        count = 0
+        for item in groundTruth:
+            if item in topKList:
+                count += 1
+        falsePositiveRateTemp = (len(topKList) - count) * 1.0 / (nodeNumber - groundTruthLength)
+        truePositiveRateTemp = count * 1.0 / groundTruthLength
+        falsePositiveRateList.append(falsePositiveRateTemp)
+        truePositiveRateList.append(truePositiveRateTemp)
+# ------ #
+falsePositiveRate = np.average(falsePositiveRateList)
+truePositiveRate = np.average(truePositiveRateList)
+print str(falsePositiveRate) + '  '+ str(truePositiveRate)
+plt.scatter(falsePositiveRate, truePositiveRate)    
+    
+    
 '''
 count = 0                    
 for nodeA, nodeB in G.edges():
