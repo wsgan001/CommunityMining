@@ -9,6 +9,7 @@ Created on Thu Mar 30 00:26:34 2017
 from heapq import heappush, heappop
 from itertools import count
 import networkx as nx
+import timeit
 
 def single_source_dijkstra_path_length(G, source, cutoff=None, beta=0.5, weight='weight'):
     get_weight = lambda u, v, data: data.get(weight, 1)
@@ -34,7 +35,7 @@ def _dijkstra(G, source, get_weight, cutoff=None, beta=0.5):
             cost = get_weight(v, u, e)
             if cost is None:
                 continue
-            vu_dist = dist[v] * get_weight(v, u, e)
+            vu_dist = dist[v] * get_weight(v, u, e) * beta
             if cutoff is not None:
                 if vu_dist > cutoff:
                     continue
@@ -58,7 +59,13 @@ G.add_edge('c','e',weight=0.65)
 G.add_edge('d','e',weight=0.8)
 G.add_edge('c','f',weight=0.8)
 G.add_edge('d','f',weight=0.8)
-print single_source_dijkstra_path_length(G,'a',cutoff=0.75,beta=1)
+print single_source_dijkstra_path_length(G,'a',cutoff=0.015,beta=0.5)
+
+start = timeit.default_timer()
+for i in range(30000):
+    single_source_dijkstra_path_length(G,'a',cutoff=0.015,beta=0.5)
+stop = timeit.default_timer()
+print stop - start
 '''
 G.add_edge('a','c',weight=0.8)
 G.add_edge('c','d',weight=0.7)
