@@ -78,7 +78,11 @@ falsePositiveRate = np.sum(FPList) * 1.0 / np.sum(conditionNegativeList)
 print str(falsePositiveRate) + '  '+ str(truePositiveRate)
 plt.scatter(falsePositiveRate, truePositiveRate)   
 
-######################
+#==============================================================================
+# cutoff=5 vs cutoff=0.0073 is almost tie
+# 0.000467776711039  0.601654411765
+# 0.000468588888899  0.601654411765
+#==============================================================================
 
 nodeNumber = len(G.nodes())
     
@@ -91,7 +95,7 @@ for node in G.nodes():
     nodeCount += 1
     if nodeCount % 1000 == 0:
         print nodeCount
-    distance = single_source_dijkstra_path_length(G,node,cutoff=0.006,weight='prob')
+    distance = single_source_dijkstra_path_length(G,node,cutoff=0.0073,weight='prob')
     topKList = sorted(distance,key=distance.get,reverse=True)[1:]
     if newG.has_node(node):
         groundTruth = newG[node].keys()
