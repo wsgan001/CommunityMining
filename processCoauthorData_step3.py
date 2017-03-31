@@ -8,6 +8,7 @@ Created on Tue Mar 28 16:33:17 2017
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+from dijkstra_prob import single_source_dijkstra_path_length
 
 inputFile = open('coauthorData_multiAuthor_step2.txt','r')
 
@@ -37,10 +38,13 @@ for line in inputFile:
         for i in range(len(newAuthors)):
             for j in range(i+1,len(newAuthors)):
                 newG.add_edge(newAuthors[i],newAuthors[j])
+
+print 'finish step 1'
                     
 for nodeA, nodeB in G.edges():
     G[nodeA][nodeB]['prob'] = 1 - np.exp(-0.5 * G[nodeA][nodeB]['count'])
     G[nodeA][nodeB]['weight'] = 1 / (G[nodeA][nodeB]['prob']**0.4)
+    #G[nodeA][nodeB]['weight'] = -np.log(G[nodeA][nodeB]['prob'])
     
 nodeNumber = len(G.nodes())
     
@@ -53,7 +57,7 @@ for node in G.nodes():
     nodeCount += 1
     if nodeCount % 1000 == 0:
         print nodeCount
-    distance = nx.single_source_dijkstra_path_length(G,node,cutoff=10,weight='weight')
+    distance = nx.single_source_dijkstra_path_length(G,node,cutoff=5,weight='weight')
     topKList = sorted(distance,key=distance.get)[1:]
     if newG.has_node(node):
         groundTruth = newG[node].keys()
@@ -72,7 +76,41 @@ for node in G.nodes():
 truePositiveRate = np.sum(TPList) * 1.0 / np.sum(conditionPositiveList)
 falsePositiveRate = np.sum(FPList) * 1.0 / np.sum(conditionNegativeList)
 print str(falsePositiveRate) + '  '+ str(truePositiveRate)
-plt.scatter(falsePositiveRate, truePositiveRate)    
+plt.scatter(falsePositiveRate, truePositiveRate)   
+
+######################
+
+nodeNumber = len(G.nodes())
+    
+TPList = []
+FPList = []
+conditionPositiveList = []
+conditionNegativeList = []
+nodeCount = 0
+for node in G.nodes():
+    nodeCount += 1
+    if nodeCount % 1000 == 0:
+        print nodeCount
+    distance = single_source_dijkstra_path_length(G,node,cutoff=0.006,weight='prob')
+    topKList = sorted(distance,key=distance.get,reverse=True)[1:]
+    if newG.has_node(node):
+        groundTruth = newG[node].keys()
+    else:
+        groundTruth = []
+    groundTruthLength = len(groundTruth)
+    count = 0
+    for item in groundTruth:
+        if item in topKList:
+            count += 1
+    TPList.append(count)
+    FPList.append(len(topKList) - count)
+    conditionPositiveList.append(groundTruthLength)
+    conditionNegativeList.append(nodeNumber - groundTruthLength)
+# ------ #
+truePositiveRate = np.sum(TPList) * 1.0 / np.sum(conditionPositiveList)
+falsePositiveRate = np.sum(FPList) * 1.0 / np.sum(conditionNegativeList)
+print str(falsePositiveRate) + '  '+ str(truePositiveRate)
+plt.scatter(falsePositiveRate, truePositiveRate) 
     
     
 '''
