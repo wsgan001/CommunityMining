@@ -71,78 +71,27 @@ for line in inputFile:
                 newG.add_edge(newAuthors[i],newAuthors[j])
 
 tempList = []
-for sz in exp_range(1, len(G.nodes())-1, 1.2):
+for sz in exp_range(1, 90, 1.2):
     if int(sz) not in tempList:
         tempList.append(int(sz))
-tempList.append(len(G.nodes())-1)
+tempList = tempList[:10]
+#tempList += range(90,len(G.nodes())-1,30)
+#tempList.append(len(G.nodes())-1)
                 
 print 'finish step 1'
                     
 for nodeA, nodeB in G.edges():
     G[nodeA][nodeB]['prob'] = 1 - np.exp(-0.5 * G[nodeA][nodeB]['count'])
     G[nodeA][nodeB]['weight'] = 1 / (G[nodeA][nodeB]['prob']**0.4)
-    #G[nodeA][nodeB]['weight'] = -np.log(G[nodeA][nodeB]['prob'])
+    G[nodeA][nodeB]['logweight'] = -np.log(G[nodeA][nodeB]['prob'])
 
 dictionaryWeight = {}
 dictionaryWeightRank = {}
 dictionaryProb = {}
 dictionaryProbRank = {}
+dictionaryLogWeight = {}
+dictionaryLogWeightRank = {}
 
-nodeCount = 0
-for node in G.nodes():
-    nodeCount += 1
-    if nodeCount % 1000 == 0:
-        print nodeCount
-        
-    distance = nx.single_source_dijkstra_path_length(G,node,weight='weight')
-    topKList = sorted(distance,key=distance.get)[1:]
-    dictionaryWeight[node] = distance
-    dictionaryWeightRank[node] = topKList
-print nodeCount
-
-#pickle.dump([dictionaryWeight,dictionaryWeightRank],open( "/Volumes/My Passport 1/weight.p", "wb" ))
-
-nodeNumber = len(G.nodes())
-    
-nodeCount = 0
-for k in tempList:
-    print k
-    TPList = []
-    FPList = []
-    conditionPositiveList = []
-    conditionNegativeList = []
-    for node in G.nodes():
-        nodeCount += 1
-        #distance = nx.single_source_dijkstra_path_length(G,node,cutoff=5,weight='weight')
-        #topKList = sorted(distance,key=distance.get)[1:]
-        topKList = dictionaryWeightRank[node][:k]
-        if newG.has_node(node):
-            groundTruth = newG[node].keys()
-        else:
-            groundTruth = []
-        groundTruthLength = len(groundTruth)
-        count = 0
-        for item in groundTruth:
-            if item in topKList:
-                count += 1
-        TPList.append(count)
-        FPList.append(len(topKList) - count)
-        conditionPositiveList.append(groundTruthLength)
-        conditionNegativeList.append(nodeNumber - 1 - groundTruthLength)
-    # ------ #
-    truePositiveRate = np.sum(TPList) * 1.0 / np.sum(conditionPositiveList)
-    falsePositiveRate = np.sum(FPList) * 1.0 / np.sum(conditionNegativeList)
-    print str(falsePositiveRate) + '  '+ str(truePositiveRate)
-    plt.scatter(falsePositiveRate, truePositiveRate)  
-
-del dictionaryWeight
-del dictionaryWeightRank
-
-#==============================================================================
-# cutoff=5 vs cutoff=0.0073 is almost tie
-# 0.00267103968079  0.715554862843
-# 0.00267621045755  0.715554862843
-#==============================================================================
 nodeCount = 0
 for node in G.nodes():
     nodeCount += 1
@@ -160,6 +109,8 @@ print nodeCount
 nodeNumber = len(G.nodes())
     
 nodeCount = 0
+falsePositiveRateHistory = [0]
+truePositiveRateHistory = [0]
 for k in tempList:
     print k
     TPList = []
@@ -188,7 +139,134 @@ for k in tempList:
     truePositiveRate = np.sum(TPList) * 1.0 / np.sum(conditionPositiveList)
     falsePositiveRate = np.sum(FPList) * 1.0 / np.sum(conditionNegativeList)
     print str(falsePositiveRate) + '  '+ str(truePositiveRate)
-    plt.scatter(falsePositiveRate, truePositiveRate, c='r') 
+    falsePositiveRateHistory.append(falsePositiveRate)
+    truePositiveRateHistory.append(truePositiveRate)
+plt.plot(falsePositiveRateHistory, truePositiveRateHistory,label='Most Probable Path',color="red")
 
-del dictionaryProb
-del dictionaryProbRank
+#del dictionaryProb
+#del dictionaryProbRank
+
+#==============================================================================
+# cutoff=5 vs cutoff=0.0073 is almost tie
+# 0.00267103968079  0.715554862843
+# 0.00267621045755  0.715554862843
+#==============================================================================
+
+nodeCount = 0
+for node in G.nodes():
+    nodeCount += 1
+    if nodeCount % 1000 == 0:
+        print nodeCount
+        
+    distance = nx.single_source_dijkstra_path_length(G,node,weight='weight')
+    topKList = sorted(distance,key=distance.get)[1:]
+    dictionaryWeight[node] = distance
+    dictionaryWeightRank[node] = topKList
+print nodeCount
+
+#pickle.dump([dictionaryWeight,dictionaryWeightRank],open( "/Volumes/My Passport 1/weight.p", "wb" ))
+
+nodeNumber = len(G.nodes())
+    
+nodeCount = 0
+falsePositiveRateHistory = [0]
+truePositiveRateHistory = [0]
+for k in tempList:
+    print k
+    TPList = []
+    FPList = []
+    conditionPositiveList = []
+    conditionNegativeList = []
+    for node in G.nodes():
+        nodeCount += 1
+        #distance = nx.single_source_dijkstra_path_length(G,node,cutoff=5,weight='weight')
+        #topKList = sorted(distance,key=distance.get)[1:]
+        topKList = dictionaryWeightRank[node][:k]
+        if newG.has_node(node):
+            groundTruth = newG[node].keys()
+        else:
+            groundTruth = []
+        groundTruthLength = len(groundTruth)
+        count = 0
+        for item in groundTruth:
+            if item in topKList:
+                count += 1
+        TPList.append(count)
+        FPList.append(len(topKList) - count)
+        conditionPositiveList.append(groundTruthLength)
+        conditionNegativeList.append(nodeNumber - 1 - groundTruthLength)
+    # ------ #
+    truePositiveRate = np.sum(TPList) * 1.0 / np.sum(conditionPositiveList)
+    falsePositiveRate = np.sum(FPList) * 1.0 / np.sum(conditionNegativeList)
+    print str(falsePositiveRate) + '  '+ str(truePositiveRate)
+    falsePositiveRateHistory.append(falsePositiveRate)
+    truePositiveRateHistory.append(truePositiveRate)
+plt.plot(falsePositiveRateHistory, truePositiveRateHistory,label='1 / (probability^r)',color="blue")  
+
+#del dictionaryWeight
+#del dictionaryWeightRank
+
+#==============================================================================
+# algorithm 3
+#==============================================================================
+
+nodeCount = 0
+for node in G.nodes():
+    nodeCount += 1
+    if nodeCount % 1000 == 0:
+        print nodeCount
+        
+    distance = nx.single_source_dijkstra_path_length(G,node,weight='logweight')
+    topKList = sorted(distance,key=distance.get)[1:]
+    dictionaryLogWeight[node] = distance
+    dictionaryLogWeightRank[node] = topKList
+print nodeCount
+
+#pickle.dump([dictionaryWeight,dictionaryWeightRank],open( "/Volumes/My Passport 1/weight.p", "wb" ))
+
+nodeNumber = len(G.nodes())
+    
+nodeCount = 0
+falsePositiveRateHistory = [0]
+truePositiveRateHistory = [0]
+for k in tempList:
+    print k
+    TPList = []
+    FPList = []
+    conditionPositiveList = []
+    conditionNegativeList = []
+    for node in G.nodes():
+        nodeCount += 1
+        #distance = nx.single_source_dijkstra_path_length(G,node,cutoff=5,weight='weight')
+        #topKList = sorted(distance,key=distance.get)[1:]
+        topKList = dictionaryLogWeightRank[node][:k]
+        if newG.has_node(node):
+            groundTruth = newG[node].keys()
+        else:
+            groundTruth = []
+        groundTruthLength = len(groundTruth)
+        count = 0
+        for item in groundTruth:
+            if item in topKList:
+                count += 1
+        TPList.append(count)
+        FPList.append(len(topKList) - count)
+        conditionPositiveList.append(groundTruthLength)
+        conditionNegativeList.append(nodeNumber - 1 - groundTruthLength)
+    # ------ #
+    truePositiveRate = np.sum(TPList) * 1.0 / np.sum(conditionPositiveList)
+    falsePositiveRate = np.sum(FPList) * 1.0 / np.sum(conditionNegativeList)
+    print str(falsePositiveRate) + '  '+ str(truePositiveRate)
+    falsePositiveRateHistory.append(falsePositiveRate)
+    truePositiveRateHistory.append(truePositiveRate)
+plt.plot(falsePositiveRateHistory, truePositiveRateHistory,label='- log(probability)',color="black")  
+
+#del dictionaryLogWeight
+#del dictionaryLogWeightRank
+
+
+plt.title('DBLP: Link prediction')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc=4)
+plt.show()
