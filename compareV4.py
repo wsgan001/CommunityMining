@@ -49,11 +49,11 @@ def generateProbabilisticGraphOld(nodeNumber=100, edgeNumber=2000):
     return G
     
 def generateProbabilisticGraph():    
-    G = nx.random_partition_graph([30,50,80],0.4,0.05)
+    G = nx.random_partition_graph([30,50,120],0.2,0.02)
     for nodeA, nodeB in G.edges():
         G[nodeA][nodeB]['weight'] = -np.random.uniform()+1
-        #G[nodeA][nodeB]['length'] = np.random.uniform(1,3)
-        G[nodeA][nodeB]['length'] = 1
+        G[nodeA][nodeB]['length'] = np.random.uniform(1,3)
+        #G[nodeA][nodeB]['length'] = 1
     return G
     
 result = []
@@ -101,13 +101,15 @@ for key in sorted_y:
     if key in sorted_z:
         plt.scatter(sorted_z[key], sorted_y[key],color = 'Red')
         differenceA = differenceA + abs(sorted_z[key] - sorted_y[key])
-plt.plot([0,160],[0,160], color ='Blue', linewidth=3.5, linestyle="--")
+plt.plot([0,200],[0,200], color ='Blue', linewidth=3.5, linestyle="--")
+plt.text(-45, 226, 'Linear Correlation: ', fontsize=15)
+plt.text(-45, 196, str(round(differenceA/((2**0.5)*200),2)), fontsize=15)
 #plt.title('Simulation: Betweenness Centrality on unweighted graph')
-plt.title('Simulation: Closeness Centrality on unweighted graph')
-#plt.title('Simulation: Betweenness Centrality on weighted graph')
+#plt.title('Simulation: Closeness Centrality on unweighted graph')
+plt.title('Simulation: Betweenness Centrality on weighted graph')
 #plt.title('Simulation: Closeness Centrality on weighted graph')
 plt.xlabel('Sample Rankings')
-plt.ylabel('1/(probability^r) Rankings')
+plt.ylabel('IPG Rankings')
 plt.show()
 print differenceA
 
@@ -116,10 +118,12 @@ for key in sorted_x:
     if key in sorted_z:
         plt.scatter(sorted_z[key], sorted_x[key],color = 'Red')
         differenceB = differenceB + abs(sorted_z[key] - sorted_x[key])
-plt.plot([0,160],[0,160], color ='Blue', linewidth=3.5, linestyle="--")
+plt.plot([0,200],[0,200], color ='Blue', linewidth=3.5, linestyle="--")
+plt.text(-45, 226, 'Linear Correlation: ', fontsize=15)
+plt.text(-45, 196, str(round(differenceB/((2**0.5)*200),2)), fontsize=15)
 #plt.title('Simulation: Betweenness Centrality on unweighted graph')
-plt.title('Simulation: Closeness Centrality on unweighted graph')
-#plt.title('Simulation: Betweenness Centrality on weighted graph')
+#plt.title('Simulation: Closeness Centrality on unweighted graph')
+plt.title('Simulation: Betweenness Centrality on weighted graph')
 #plt.title('Simulation: Closeness Centrality on weighted graph')
 plt.xlabel('Sample Rankings')
 plt.ylabel('ML Rankings')
@@ -131,13 +135,15 @@ for key in sorted_a:
     if key in sorted_z:
         plt.scatter(sorted_z[key], sorted_a[key],color = 'Red')
         differenceC = differenceC + abs(sorted_z[key] - sorted_a[key])
-plt.plot([0,160],[0,160], color ='Blue', linewidth=3.5, linestyle="--")
+plt.plot([0,200],[0,200], color ='Blue', linewidth=3.5, linestyle="--")
+plt.text(-45, 226, 'Linear Correlation: ', fontsize=15)
+plt.text(-45, 196, str(round(differenceC/((2**0.5)*200),2)), fontsize=15)
 #plt.title('Simulation: Betweenness Centrality on unweighted graph')
-plt.title('Simulation: Closeness Centrality on unweighted graph')
-#plt.title('Simulation: Betweenness Centrality on weighted graph')
+#plt.title('Simulation: Closeness Centrality on unweighted graph')
+plt.title('Simulation: Betweenness Centrality on weighted graph')
 #plt.title('Simulation: Closeness Centrality on weighted graph')
 plt.xlabel('Sample Rankings')
-plt.ylabel('-log(probability) Rankings')
+plt.ylabel('NL Rankings')
 plt.show()
 print differenceC
 
@@ -147,7 +153,8 @@ print differenceC
 #==============================================================================
 # following: experiment 2
 #==============================================================================
-gamaRange = [0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6]
+'''
+gamaRange = [0.001,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6]
 differenceExperimentHistory = []
 for r in gamaRange:
     G = changeWeight(G,r)
@@ -158,16 +165,16 @@ for r in gamaRange:
     differenceExperiment = 0
     for key in sorted_b:
         if key in sorted_z:
-            plt.scatter(sorted_z[key], sorted_b[key],color = 'Red')
+            #plt.scatter(sorted_z[key], sorted_b[key],color = 'Red')
             differenceExperiment = differenceExperiment + abs(sorted_z[key] - sorted_b[key])
-    plt.plot([0,160],[0,160], color ='Blue', linewidth=3.5, linestyle="--")
+    #plt.plot([0,160],[0,160], color ='Blue', linewidth=3.5, linestyle="--")
     #plt.title('Simulation: Betweenness Centrality on unweighted graph')
-    plt.title('Simulation: Closeness Centrality on unweighted graph')
+    #plt.title('Simulation: Closeness Centrality on unweighted graph')
     #plt.title('Simulation: Betweenness Centrality on weighted graph')
     #plt.title('Simulation: Closeness Centrality on weighted graph')
-    plt.xlabel('Sample Rankings')
-    plt.ylabel('-log(probability) Rankings, r = '+ str(r))
-    plt.show()
+    #plt.xlabel('Sample Rankings')
+    #plt.ylabel('-log(probability) Rankings, r = '+ str(r))
+    #plt.show()
     print differenceExperiment
     differenceExperimentHistory.append(differenceExperiment)
 
@@ -175,3 +182,4 @@ plt.plot(gamaRange, differenceExperimentHistory)
 plt.xlabel('gama (r) value')
 plt.ylabel('Linearity')
 plt.show()
+'''

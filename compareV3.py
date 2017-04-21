@@ -31,7 +31,7 @@ def changeWeight(G):
         #G[nodeA][nodeB]['weight'] = np.tan(np.pi*(1-G[nodeA][nodeB]['weight']))+1
         #G[nodeA][nodeB]['weight'] = 1.0 / np.exp(G[nodeA][nodeB]['weight'])
         #G[nodeA][nodeB]['weight'] = 1.0 / (G[nodeA][nodeB]['weight'])
-        G[nodeA][nodeB]['newWeight'] = 1.0 / (G[nodeA][nodeB]['weight']**0.4)
+        G[nodeA][nodeB]['newWeight'] = 1.0 / (G[nodeA][nodeB]['weight']**0.3)
         #G[nodeA][nodeB]['weight'] = np.exp(-G[nodeA][nodeB]['weight'])
         #G[nodeA][nodeB]['weight'] = 1.0 / G[nodeA][nodeB]['weight'] -np.log( G[nodeA][nodeB]['weight'])
         #G[nodeA][nodeB]['weight'] = -np.log( G[nodeA][nodeB]['weight'])
@@ -107,7 +107,8 @@ def generateProbabilisticGraphOld(nodeNumber, edgeNumber):
     return G
 
 def generateProbabilisticGraph():    
-    G = nx.random_partition_graph([30,50,80],0.4,0.05)
+    #G = nx.random_partition_graph([30,50,80],0.4,0.05)
+    G = nx.random_partition_graph([30,50,120],0.2,0.02)
     #G = nx.gaussian_random_partition_graph(150,50,2,0.4,0.05)
     for nodeA, nodeB in G.edges():
         G[nodeA][nodeB]['weight'] = -np.random.uniform()+1
@@ -172,10 +173,14 @@ for key in sorted_y:
         plt.scatter(sorted_z[key], sorted_y[key],color = 'Red')
         differenceA = differenceA + abs(sorted_z[key] - sorted_y[key])
 plt.plot([0,151],[0,151], color ='Blue', linewidth=3.5, linestyle="--")
+plt.text(-15, 136, 'Linear Correlation: ', fontsize=15)
+plt.text(-15, 116, str(round(differenceA/((2**0.5)*151),2)), fontsize=15)
 #plt.title('Enron Data: Betweenness Centrality')
 plt.title('Enron Data: Closeness Centrality')
 plt.xlabel('Sample Rankings')
-plt.ylabel('1/(probability^r) Rankings')
+#plt.ylabel("$1/(probability^{lambda})$ Rankings")
+plt.ylabel("IPG Rankings")
+plt.legend(loc=2)
 plt.show()
 print differenceA
 
@@ -185,10 +190,13 @@ for key in sorted_x:
         plt.scatter(sorted_z[key], sorted_x[key],color = 'Red')
         differenceB = differenceB + abs(sorted_z[key] - sorted_x[key])
 plt.plot([0,151],[0,151], color ='Blue', linewidth=3.5, linestyle="--")
+plt.text(-15, 136, 'Linear Correlation: ', fontsize=15)
+plt.text(-15, 116, str(round(differenceB/((2**0.5)*151),2)), fontsize=15)
 #plt.title('Enron Data: Betweenness Centrality')
 plt.title('Enron Data: Closeness Centrality')
 plt.xlabel('Sample Rankings')
 plt.ylabel('ML Rankings')
+plt.legend(loc=2)
 plt.show()
 print differenceB
 
@@ -198,10 +206,13 @@ for key in sorted_a:
         plt.scatter(sorted_z[key], sorted_a[key],color = 'Red')
         differenceC = differenceC + abs(sorted_z[key] - sorted_a[key])
 plt.plot([0,151],[0,151], color ='Blue', linewidth=3.5, linestyle="--")
+plt.text(-15, 136, 'Linear Correlation: ', fontsize=15)
+plt.text(-15, 116, str(round(differenceC/((2**0.5)*151),2)), fontsize=15)
 #plt.title('Enron Data: Betweenness Centrality')
 plt.title('Enron Data: Closeness Centrality')
 plt.xlabel('Sample Rankings')
-plt.ylabel('-log(probability) Rankings')
+plt.ylabel('NL Rankings')
+plt.legend(loc=2)
 plt.show()
 print differenceC
 
