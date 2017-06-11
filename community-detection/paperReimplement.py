@@ -20,11 +20,14 @@ def localCommunityIdentification(G,startNode):
     D = set([startNode])
     B = {startNode:len(G[startNode])}
     S = set(G[startNode].keys())
+    previousRemove = set()
     label = True
     R = 0
     BIn = 0
     BTotal = len(G[startNode])
     while label:
+        print R
+        print D
         RPrime = -float('inf')
         for node in S:
             tempSet = set(G[node].keys())
@@ -43,9 +46,11 @@ def localCommunityIdentification(G,startNode):
             if tempLabel:
                 removeSet.add(node)
             count = 0
+            previousCount = 0
             for item in removeSet:
                 count += len(set(G[item].keys()).intersection(removeSet))
-            deltaPrime = count // 2
+                previousCount += len(set(G[item].keys()).intersection(previousRemove))
+            deltaPrime = count // 2 + previousCount
             tempBIn = BIn + deltaIn - deltaPrime
             tempBTotal = BTotal + deltaTotal - deltaPrime
             tempRPrime = float(tempBIn)/float(tempBTotal)
@@ -55,17 +60,20 @@ def localCommunityIdentification(G,startNode):
                 saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
                 saveBInList = [tempBIn]
                 saveBTotalList = [tempBTotal]
+                saveRemoveSetList = [removeSet]
             elif tempRPrime == RPrime:
                 popNodeList.append(node)
                 saveBList.append(tempB)
                 saveBInList.append(tempBIn)
                 saveBTotalList.append(tempBTotal)
+                saveRemoveSetList.append(removeSet)
         if RPrime > R:
             index = random.randint(0,len(popNodeList)-1)
             popNode = popNodeList[index]
             saveB = saveBList[index]
             saveBIn = saveBInList[index]
             saveBTotal = saveBTotalList[index]
+            saveRemoveSet = saveRemoveSetList[index]
             D.add(popNode)
             S.remove(popNode)
             B = {}
@@ -76,6 +84,7 @@ def localCommunityIdentification(G,startNode):
             if len(difference) > 0:
                 B[popNode] = len(difference)
                 S = S.union(difference)
+            previousRemove = previousRemove.union(saveRemoveSet)
             R = RPrime
             BIn = saveBIn
             BTotal = saveBTotal
