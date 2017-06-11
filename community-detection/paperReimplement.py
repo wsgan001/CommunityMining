@@ -29,6 +29,7 @@ def localCommunityIdentification(G,startNode):
         print R
         print D
         RPrime = -float('inf')
+        ShellNodeCount = -float('inf')
         for node in S:
             tempSet = set(G[node].keys())
             deltaIn = len(tempSet.intersection(D))
@@ -54,14 +55,16 @@ def localCommunityIdentification(G,startNode):
             tempBIn = BIn + deltaIn - deltaPrime
             tempBTotal = BTotal + deltaTotal - deltaPrime
             tempRPrime = float(tempBIn)/float(tempBTotal)
-            if tempRPrime > RPrime:
+            tempShellNodeCount = len(set(G[node].keys()).intersection(S))
+            if tempRPrime > RPrime or (tempRPrime == RPrime and tempShellNodeCount > ShellNodeCount):
                 RPrime = tempRPrime
+                ShellNodeCount = tempShellNodeCount
                 popNodeList = [node]
                 saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
                 saveBInList = [tempBIn]
                 saveBTotalList = [tempBTotal]
                 saveRemoveSetList = [removeSet]
-            elif tempRPrime == RPrime:
+            elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
                 popNodeList.append(node)
                 saveBList.append(tempB)
                 saveBInList.append(tempBIn)
