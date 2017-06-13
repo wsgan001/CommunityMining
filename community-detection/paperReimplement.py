@@ -13,8 +13,23 @@ import networkx as nx
 import random
 
 def generateGraph():
-    G = nx.random_partition_graph([30,50],0.2,0.02)
+    G = nx.random_partition_graph([300,500],0.2,0.02)
     return G
+    
+def iterativeExpansion(G,startNode):
+    commnutyList = []
+    community, shell = localCommunityIdentification(G,startNode)
+    commnutyList.append(community)
+    while len(shell) > 0:
+        startNode = list(shell)[random.randint(0,len(shell)-1)]
+        community, shellPrime = localCommunityIdentification(G,startNode)
+        commnutyList.append(community)
+        shell = shell.difference(community)
+        for item in commnutyList:
+            shellPrime = shellPrime.difference(item)
+        shell = shell.union(shellPrime)
+    print "**************************"
+    return commnutyList
 
 def localCommunityIdentification(G,startNode):
     D = set([startNode])
@@ -56,21 +71,40 @@ def localCommunityIdentification(G,startNode):
             tempBTotal = BTotal + deltaTotal - deltaPrime
             tempRPrime = float(tempBIn)/float(tempBTotal)
             tempShellNodeCount = len(set(G[node].keys()).intersection(S))
-            if tempRPrime > RPrime or (tempRPrime == RPrime and tempShellNodeCount > ShellNodeCount):
-                RPrime = tempRPrime
-                ShellNodeCount = tempShellNodeCount
-                popNodeList = [node]
-                saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
-                saveBInList = [tempBIn]
-                saveBTotalList = [tempBTotal]
-                saveRemoveSetList = [removeSet]
-            elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
-                popNodeList.append(node)
-                saveBList.append(tempB)
-                saveBInList.append(tempBIn)
-                saveBTotalList.append(tempBTotal)
-                saveRemoveSetList.append(removeSet)
-        if RPrime > R:
+            if len(D) == 1:
+                if tempShellNodeCount > ShellNodeCount or (tempShellNodeCount == ShellNodeCount and tempRPrime > RPrime):
+                    RPrime = tempRPrime
+                    ShellNodeCount = tempShellNodeCount
+                    popNodeList = [node]
+                    saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
+                    saveBInList = [tempBIn]
+                    saveBTotalList = [tempBTotal]
+                    saveRemoveSetList = [removeSet]
+                elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
+                    popNodeList.append(node)
+                    saveBList.append(tempB)
+                    saveBInList.append(tempBIn)
+                    saveBTotalList.append(tempBTotal)
+                    saveRemoveSetList.append(removeSet)
+            else:
+                if tempRPrime > RPrime or (tempRPrime == RPrime and tempShellNodeCount > ShellNodeCount):
+                    RPrime = tempRPrime
+                    ShellNodeCount = tempShellNodeCount
+                    popNodeList = [node]
+                    saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
+                    saveBInList = [tempBIn]
+                    saveBTotalList = [tempBTotal]
+                    saveRemoveSetList = [removeSet]
+                elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
+                    popNodeList.append(node)
+                    saveBList.append(tempB)
+                    saveBInList.append(tempBIn)
+                    saveBTotalList.append(tempBTotal)
+                    saveRemoveSetList.append(removeSet)
+        if RPrime > R:# or (RPrime > 0.98 * R and ShellNodeCount >= 2):
+            print popNodeList
+            print RPrime
+            print ShellNodeCount
             index = random.randint(0,len(popNodeList)-1)
             popNode = popNodeList[index]
             saveB = saveBList[index]
@@ -93,39 +127,44 @@ def localCommunityIdentification(G,startNode):
             BTotal = saveBTotal
         else:
             label = False
-    return
+    return D, S
     
-G = nx.Graph()
-G.add_edge(1,2)
-G.add_edge(1,3)
-G.add_edge(1,4)
-G.add_edge(2,3)
-G.add_edge(2,4)
-G.add_edge(2,13)
-G.add_edge(3,4)
-G.add_edge(3,7)
-G.add_edge(3,13)
-G.add_edge(4,9)
-G.add_edge(4,13)
-G.add_edge(5,6)
-G.add_edge(5,7)
-G.add_edge(5,8)
-G.add_edge(5,13)
-G.add_edge(6,7)
-G.add_edge(6,8)
-G.add_edge(6,10)
-G.add_edge(6,13)
-G.add_edge(7,8)
-G.add_edge(7,13)
-G.add_edge(9,10)
-G.add_edge(9,11)
-G.add_edge(9,12)
-G.add_edge(10,11)
-G.add_edge(10,12)
-G.add_edge(11,12)
-G.add_edge(11,13)
-start = 13
-localCommunityIdentification(G,start)
+#==============================================================================
+# G = nx.Graph()
+# G.add_edge(1,2)
+# G.add_edge(1,3)
+# G.add_edge(1,4)
+# G.add_edge(2,3)
+# G.add_edge(2,4)
+# G.add_edge(2,13)
+# G.add_edge(3,4)
+# G.add_edge(3,7)
+# G.add_edge(3,13)
+# G.add_edge(4,9)
+# G.add_edge(4,13)
+# G.add_edge(5,6)
+# G.add_edge(5,7)
+# G.add_edge(5,8)
+# G.add_edge(5,13)
+# G.add_edge(6,7)
+# G.add_edge(6,8)
+# G.add_edge(6,10)
+# G.add_edge(6,13)
+# G.add_edge(7,8)
+# G.add_edge(7,13)
+# G.add_edge(9,10)
+# G.add_edge(9,11)
+# G.add_edge(9,12)
+# G.add_edge(10,11)
+# G.add_edge(10,12)
+# G.add_edge(11,12)
+# G.add_edge(11,13)
+# start = 10
+#==============================================================================
+G = generateGraph()
+start = 12
+print len(localCommunityIdentification(G,start)[0])
+print iterativeExpansion(G,start)
 
             
 #==============================================================================
