@@ -13,7 +13,7 @@ import networkx as nx
 import random
 
 def generateGraph():
-    G = nx.random_partition_graph([300,500],0.2,0.02)
+    G = nx.random_partition_graph([30,50],0.2,0.02)
     return G
     
 def iterativeExpansion(G,startNode):
@@ -161,10 +161,19 @@ def localCommunityIdentification(G,startNode):
 # G.add_edge(11,13)
 # start = 10
 #==============================================================================
-G = generateGraph()
-start = 12
-print len(localCommunityIdentification(G,start)[0])
-print iterativeExpansion(G,start)
+#G = generateGraph()
+#G = nx.karate_club_graph() # 2被分错了，[24, 25, 28, 31]被单独了出来，但是总体很不错
+#G = nx.florentine_families_graph()
+#start = 'Strozzi'
+G = nx.read_gml("football_edit.gml") # value = 10这一组被分成了两组
+start = 'Kent'
+#print len(localCommunityIdentification(G,start)[0])
+result = iterativeExpansion(G,start)
+print result
+for temp in result:
+    for item in temp:
+        print G.node[item]
+    print '*******************'
 
             
 #==============================================================================
