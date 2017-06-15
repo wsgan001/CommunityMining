@@ -29,6 +29,28 @@ def iterativeExpansion(G,startNode):
             shellPrime = shellPrime.difference(item)
         shell = shell.union(shellPrime)
     print "**************************"
+    label = True
+    print commnutyList
+    print "**************************"
+    while label:
+        label = False
+        temp = []
+        stopIndex = []
+        for i in xrange(len(commnutyList)):
+            tempLabel = True
+            if i not in stopIndex:
+                for j in xrange(i+1,len(commnutyList)):
+                    lengthA = len(commnutyList[i])
+                    lengthB = len(commnutyList[j])
+                    if len(commnutyList[i].intersection(commnutyList[j])) > 0.8 * min(lengthA,lengthB):
+                        label = True
+                        tempLabel = False
+                        temp.append(commnutyList[i].union(commnutyList[j]))
+                        stopIndex.append(j)
+                        break
+                if tempLabel:
+                    temp.append(commnutyList[i])
+        commnutyList = temp
     return commnutyList
 
 def localCommunityIdentification(G,startNode):
@@ -161,19 +183,30 @@ def localCommunityIdentification(G,startNode):
 # G.add_edge(11,13)
 # start = 10
 #==============================================================================
-#G = generateGraph()
-#G = nx.karate_club_graph() # 2被分错了，[24, 25, 28, 31]被单独了出来，但是总体很不错
-#G = nx.florentine_families_graph()
-#start = 'Strozzi'
-G = nx.read_gml("football_edit.gml") # value = 10这一组被分成了两组
-start = 'Kent'
-#print len(localCommunityIdentification(G,start)[0])
+#==============================================================================
+# G = generateGraph()
+# start = 7
+# result = iterativeExpansion(G,start)
+# print result
+#==============================================================================
+G = nx.karate_club_graph() # 2被分错了，start=1时[24, 25, 28, 31]被单独了出来，但是总体很不错，有时候也会独立[16, 10, 4, 5, 6]
+#当start=7时 [16, 10, 4, 5, 6]被独立
+start = 1
 result = iterativeExpansion(G,start)
 print result
-for temp in result:
-    for item in temp:
-        print G.node[item]
-    print '*******************'
+#G = nx.florentine_families_graph()
+#start = 'Strozzi'
+#==============================================================================
+# G = nx.read_gml("football_edit.gml") # value = 10这一组被分成了两组
+# start = 'Kent'
+# #print len(localCommunityIdentification(G,start)[0])
+# result = iterativeExpansion(G,start)
+# print result
+# for temp in result:
+#     for item in temp:
+#         print G.node[item]
+#     print '*******************'
+#==============================================================================
 
             
 #==============================================================================
