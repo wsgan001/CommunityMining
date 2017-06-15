@@ -8,6 +8,7 @@ Created on Wed Jun 14 23:12:00 2017
 
 import networkx as nx
 import random
+import numpy as np
 
 def generateGraph():
     G = nx.random_partition_graph([30,50],0.2,0.02)
@@ -161,41 +162,67 @@ def localCommunityIdentification(G,startNode):
             label = False
     return D, S
     
-G = nx.Graph()
-G.add_edge(1,2)
-G.add_edge(1,3)
-G.add_edge(1,4)
-G.add_edge(2,3)
-G.add_edge(2,4)
-G.add_edge(2,13)
-G.add_edge(3,4)
-G.add_edge(3,7)
-G.add_edge(3,13)
-G.add_edge(4,9)
-G.add_edge(4,13)
-G.add_edge(5,6)
-G.add_edge(5,7)
-G.add_edge(5,8)
-G.add_edge(5,13)
-G.add_edge(6,7)
-G.add_edge(6,8)
-G.add_edge(6,10)
-G.add_edge(6,13)
-G.add_edge(7,8)
-G.add_edge(7,13)
-G.add_edge(9,10)
-G.add_edge(9,11)
-G.add_edge(9,12)
-G.add_edge(10,11)
-G.add_edge(10,12)
-G.add_edge(11,12)
-G.add_edge(11,13)
-for a,b in G.edges():
-    G.edge[a][b]['prob'] = 0.7
-start = 13
-print localCommunityIdentification(G,start)[0]
+def addProb(G,prob=0.9,percent=0.15):
+    for a,b in G.edges():
+        value = 0.5 * np.random.randn() + prob
+        while value <= 0 or value > 1:
+            value = 0.5 * np.random.randn() + prob
+        G.edge[a][b]['prob'] = value
+    count = 0
+    countNumber = percent * len(G.edges())
+    nodeList = G.nodes()
+    nodeNumber = len(nodeList)
+    while count < countNumber:
+        nodeA = nodeList[np.random.randint(nodeNumber)]
+        nodeB = nodeList[np.random.randint(nodeNumber)]
+        while nodeA == nodeB or nodeB in G[nodeA]:
+            nodeB = nodeList[np.random.randint(nodeNumber)]
+            
+        value = 0.5 * np.random.randn() + (1-prob)
+        while value <= 0 or value > 1:
+            value = 0.5 * np.random.randn() + (1-prob)
+    
+        G.add_edge(nodeA,nodeB,prob=value)
+        count += 1
+    return G
+    
+#==============================================================================
+# G = nx.Graph()
+# G.add_edge(1,2)
+# G.add_edge(1,3)
+# G.add_edge(1,4)
+# G.add_edge(2,3)
+# G.add_edge(2,4)
+# G.add_edge(2,13)
+# G.add_edge(3,4)
+# G.add_edge(3,7)
+# G.add_edge(3,13)
+# G.add_edge(4,9)
+# G.add_edge(4,13)
+# G.add_edge(5,6)
+# G.add_edge(5,7)
+# G.add_edge(5,8)
+# G.add_edge(5,13)
+# G.add_edge(6,7)
+# G.add_edge(6,8)
+# G.add_edge(6,10)
+# G.add_edge(6,13)
+# G.add_edge(7,8)
+# G.add_edge(7,13)
+# G.add_edge(9,10)
+# G.add_edge(9,11)
+# G.add_edge(9,12)
+# G.add_edge(10,11)
+# G.add_edge(10,12)
+# G.add_edge(11,12)
+# G.add_edge(11,13)
+# G = addProb(G)
+# start = 13
+# print iterativeExpansion(G,start)
+#==============================================================================
 #==============================================================================
 # G = generateGraph()
+# G = addProb(G,prob=0.9,percent=0.25)
 # start = 7
 # result = iterativeExpansion(G,start)
 # print result
@@ -203,23 +230,21 @@ print localCommunityIdentification(G,start)[0]
 #==============================================================================
 # G = nx.karate_club_graph() # 2被分错了，start=1时[24, 25, 28, 31]被单独了出来，但是总体很不错，有时候也会独立[16, 10, 4, 5, 6]
 # #当start=7时 [16, 10, 4, 5, 6]被独立
+# G = addProb(G,prob=0.9,percent=0.25)
 # start = 1
 # result = iterativeExpansion(G,start)
 # print result
 #==============================================================================
-#G = nx.florentine_families_graph()
-#start = 'Strozzi'
-#==============================================================================
-# G = nx.read_gml("football_edit.gml") # value = 10这一组被分成了两组
-# start = 'Kent'
-# #print len(localCommunityIdentification(G,start)[0])
-# result = iterativeExpansion(G,start)
-# print result
-# for temp in result:
-#     for item in temp:
-#         print G.node[item]
-#     print '*******************'
-#==============================================================================
+G = nx.read_gml("football_edit.gml") # value = 10这一组被分成了两组
+G = addProb(G,prob=0.9,percent=0.25)
+start = 'Kent'
+#print len(localCommunityIdentification(G,start)[0])
+result = iterativeExpansion(G,start)
+print result
+for temp in result:
+    for item in temp:
+        print G.node[item]
+    print '*******************'
 
             
 #==============================================================================
