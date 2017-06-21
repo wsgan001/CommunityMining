@@ -10,6 +10,17 @@ Created on Tue Jun 20 16:11:20 2017
 
 import networkx as nx
 import numpy as np
+import random
+
+class Save(object):
+    def __init__(self, label, RPrime, popNode):
+        self.label = label
+        self.RPrime = None
+        self.popNode = popNode
+        self.tempB = None
+        self.tempBIn = None
+        self.tempBTotal = None
+        self.RemoveSetList = None       
 
 class SampleGraph(object):
     def __init__(self, G, D, B, S, previousRemove, R, BIn, BTotal):
@@ -62,14 +73,59 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
         SGList.append(tempSG)
         #addNodeSet = addNodeSet.union(tempAddNodeSet)
     S = set(uncertainG[startNode].keys())
-    for node in S:
+    saveList = []
+    RPrime = -float('inf')
+    for node in random.shuffle(list(S)):
         checkedNodeSet.add(node)
+        tempSaveList = []
         for i in xrange(sampleNumber):
             SG = SGList[i]
             SG = sampleGraph(uncertainG,SG,node,checkedNodeSet)
             if node not in SG.S:
-                # 更新SG的各项参数，但是R不用变（R不用重新求）
-            
+                # 更新SG的各项参数，但是R不用变（R不用重新求）,之后确定要更新的时候再更新
+                save = Save(False, SG.R, node)
+                tempSaveList.append(save)
+            else:
+                tempSet = set(SG.G[node].keys())
+                deltaIn = len(tempSet.intersection(SG.D))
+                deltaTotal = len(tempSet) - deltaIn
+                tempB = dict(SG.B)
+                removeSet = set()
+                tempLabel = True
+                for item in tempSet:
+                    if item in tempB:
+                        tempB[item] -= 1
+                        if tempB[item] == 0:
+                            removeSet.add(item)
+                    else:
+                        tempLabel = False
+                if tempLabel:
+                    removeSet.add(node)
+
+                count = 0
+                previousCount = 0
+                for item in removeSet:
+                    count += len(set(SG.G[item].keys()).intersection(removeSet))
+                    previousCount += len(set(SG.G[item].keys()).intersection(SG.previousRemove))
+                deltaPrime = count / 2 + previousCount
+                tempBIn = SG.BIn + deltaIn - deltaPrime
+                tempBTotal = SG.BTotal + deltaTotal - deltaPrime
+                tempRPrime = float(tempBIn)/float(tempBTotal)
+                #tempShellNodeCount = len(set(G[node].keys()).intersection(S))
+                save = Save(True, tempRPrime, node)
+                save.tempB = tempB
+                save.tempBIn = tempBIn
+                save.tempBTotal = tempBTotal
+                save.RemoveSetList = removeSet
+                tempSaveList.append(save)
+        changeRPrime = 0
+        for i in xrange(sampleNumber):
+            changeRPrime += tempSaveList[i].RPrime
+        changeRPrime = float(changeRPrime )/float(sampleNumber)
+        if changeRPrime > RPrime:
+            saveList = tempSaveList
+            RPrime = changeRPrime
+        
 
 def addProb(G,prob=0.9,percent=0.15):
     for a,b in G.edges():
