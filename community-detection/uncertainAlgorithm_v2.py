@@ -15,7 +15,7 @@ import random
 class Save(object):
     def __init__(self, label, RPrime, popNode):
         self.label = label
-        self.RPrime = None
+        self.RPrime = RPrime
         self.popNode = popNode
         self.tempB = None
         self.tempBIn = None
@@ -35,10 +35,11 @@ class SampleGraph(object):
 
 def main():
     uncertainG = generateUncertainGraph()
-    print localCommunityIdentification(uncertainG,1,100)
+    print localCommunityIdentification(uncertainG,13,100)
     
 def sampleGraphInit(uncertainG,node):
     sampleG = nx.Graph()
+    sampleG.add_node(node)
     #addNodeSet = set() # 为了建立S，所有的sample G的addNodeSet会进行union
     for otherNode in uncertainG[node]:
         probability = uncertainG[node][otherNode]['prob']
@@ -57,6 +58,7 @@ def sampleGraphInit(uncertainG,node):
             
 def sampleGraph(uncertainG,SG,node,checkedNodeSet):
     if node not in checkedNodeSet:
+        SG.G.add_node(node)
         for otherNode in uncertainG[node]:
             if otherNode not in checkedNodeSet:
                 probability = uncertainG[node][otherNode]['prob']
@@ -80,7 +82,9 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
     while label:
         saveList = []
         RPrime = -float('inf')
-        for node in S:#random.shuffle(list(S)):
+        shuffleList = list(S)
+        random.shuffle(shuffleList)
+        for node in shuffleList:
             tempSaveList = []
             for i in xrange(sampleNumber):
                 SG = SGList[i]
@@ -88,7 +92,13 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                 SGList[i] = SG
                 if node not in SG.S: # 脱离了之前的community
                     # 更新SG的各项参数，但是R不用变（R不用重新求）,之后确定要更新的时候再更新
-                    save = Save(False, float(SG.BIn)/float(SG.BTotal+len(SG.G[node])), node)
+                    if SG.BTotal+len(SG.G[node]) == 0:
+                        if SG.BIn == 0:
+                            save = Save(False, 0, node)
+                        else:
+                            save = Save(False, 1, node)
+                    else:
+                        save = Save(False, float(SG.BIn)/float(SG.BTotal+len(SG.G[node])), node)
                     tempSaveList.append(save)
                 else:
                     tempSet = set(SG.G[node].keys())
@@ -148,7 +158,13 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                     SG.B[node] = len(SG.G[node])
                     SG.S = SG.S.union(set(SG.G[node].keys()))
                     SG.BTotal += len(SG.G[node])
-                    SG.R = float(SG.BIn) / float(SG.BTotal)
+                    if SG.BTotal == 0:
+                        if SG.BIn == 0:
+                            SG.R = 0
+                        else:
+                            SG.R = 1
+                    else:
+                        SG.R = float(SG.BIn) / float(SG.BTotal)
                     SGList[i] = SG
                 else:
                     SG = SGList[i]
@@ -227,7 +243,10 @@ def generateUncertainGraph():
     G.add_edge(10,12)
     G.add_edge(11,12)
     G.add_edge(11,13)
-    G = addProb(G)
+    #G = addProb(G)
+    for a,b in G.edges():
+        value = 1
+        G.edge[a][b]['prob'] = value
     return G
     
 main()
