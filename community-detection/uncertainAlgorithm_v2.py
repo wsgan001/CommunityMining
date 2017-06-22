@@ -35,15 +35,20 @@ class SampleGraph(object):
         self.BTotal = BTotal
 
 def main():
-    uncertainG = generateUncertainGraph()
-    D, S, R, GList, SGR = localCommunityIdentification(uncertainG,13,100)
-    print D, S, R
-    print SGR
-    RList = []
-    for item in GList:
-        RList.append(calculateR(item,D))
-    print sum(RList)/100.
-    print RList
+    while True:
+        uncertainG = generateUncertainGraph()
+        D, S, R, GList, SGR, SGList = localCommunityIdentification(uncertainG,13,100)
+        print D, S, R
+        print SGR
+        RList = []
+        for item in GList:
+            RList.append(calculateR(item,D))
+        print sum(RList)/100.
+        print RList
+        #if sum(RList)/100. == float(1):
+        #    break
+        if sum(RList)/100. != R:
+            return GList, SGList
     
 def sampleGraphInit(uncertainG,node):
     sampleG = nx.Graph()
@@ -99,13 +104,15 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                 SG = sampleGraph(uncertainG,SG,node,checkedNodeSet)
                 SGList[i] = SG
                 if node not in SG.S: # 脱离了之前的community
-                    # 更新SG的各项参数，但是R不用变（R不用重新求）,之后确定要更新的时候再更新
+                    # 更新SG的各项参数，之后确定要更新的时候再更新
                     if SG.BTotal+len(SG.G[node]) == 0:
-                        if SG.BIn == 0:
+                        if SG.R == 0: # 孤立点和孤立点（有没有link都是）
                             save = Save(False, 0, node)
-                        else:
+                        else: # 之前已经形成community，且该community没有向外的link，且添加了一个没有向外link的一个点，极少出现的情况
+                        # 似乎还缺少考虑一种情况：之前已经形成community，且该community没有向外的link，添加了一个向外有link的点
+                        # 和evaluate.py里已经相同处理   
                             save = Save(False, 1, node)
-                    else:
+                    else: # 之前已经形成一个community了，现在有一个孤立点
                         save = Save(False, float(SG.BIn)/float(SG.BTotal+len(SG.G[node])), node)
                     tempSaveList.append(save)
                 else:
@@ -134,7 +141,7 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                     tempBIn = SG.BIn + deltaIn - deltaPrime
                     tempBTotal = SG.BTotal + deltaTotal - deltaPrime
                     if tempBTotal == 0:
-                        tempRPrime = 1
+                        tempRPrime = 1 # 到这里了肯定不是孤立点的情况，所以肯定是1
                     else:
                         tempRPrime = float(tempBIn)/float(tempBTotal)
                     #tempShellNodeCount = len(set(G[node].keys()).intersection(S))
@@ -166,13 +173,16 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                     SG.B[node] = len(SG.G[node])
                     SG.S = SG.S.union(set(SG.G[node].keys()))
                     SG.BTotal += len(SG.G[node])
-                    if SG.BTotal == 0:
-                        if SG.BIn == 0:
-                            SG.R = 0
-                        else:
-                            SG.R = 1
-                    else:
-                        SG.R = float(SG.BIn) / float(SG.BTotal)
+                    SG.R = saveList[i].RPrime # 前面已经处理过了，不用管
+#==============================================================================
+#                     if SG.BTotal == 0:
+#                         if SG.R == 0:
+#                             SG.R = 0
+#                         else:
+#                             SG.R = 1
+#                     else:
+#                         SG.R = float(SG.BIn) / float(SG.BTotal)
+#==============================================================================
                     SGList[i] = SG
                 else:
                     SG = SGList[i]
@@ -200,7 +210,7 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
 #         count += len(item.G.edges())
 #     print float(count)/float(sampleNumber)
 #==============================================================================
-    return D, S, R, [item.G for item in SGList], [item.R for item in SGList]
+    return D, S, R, [item.G for item in SGList], [item.R for item in SGList], SGList
             
     
             
@@ -259,10 +269,12 @@ def generateUncertainGraph():
     G.add_edge(10,12)
     G.add_edge(11,12)
     G.add_edge(11,13)
-    #G = addProb(G)
-    for a,b in G.edges():
-        value = 0.8
-        G.edge[a][b]['prob'] = value
+    G = addProb(G)
+#==============================================================================
+#     for a,b in G.edges():
+#         value = 0.8
+#         G.edge[a][b]['prob'] = value
+#==============================================================================
     return G
     
-main()
+GList, SGList = main()
