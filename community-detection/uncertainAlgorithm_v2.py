@@ -11,6 +11,7 @@ Created on Tue Jun 20 16:11:20 2017
 import networkx as nx
 import numpy as np
 import random
+from evaluate import calculateR
 
 class Save(object):
     def __init__(self, label, RPrime, popNode):
@@ -35,7 +36,14 @@ class SampleGraph(object):
 
 def main():
     uncertainG = generateUncertainGraph()
-    print localCommunityIdentification(uncertainG,13,100)
+    D, S, R, GList, SGR = localCommunityIdentification(uncertainG,13,100)
+    print D, S, R
+    print SGR
+    RList = []
+    for item in GList:
+        RList.append(calculateR(item,D))
+    print sum(RList)/100.
+    print RList
     
 def sampleGraphInit(uncertainG,node):
     sampleG = nx.Graph()
@@ -184,7 +192,15 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                     SG.BTotal = saveList[i].tempBTotal
         else:
             label = False
-    return D, S
+            
+#==============================================================================
+#     count = 0
+#     for item in SGList:
+#         print len(item.G.edges())
+#         count += len(item.G.edges())
+#     print float(count)/float(sampleNumber)
+#==============================================================================
+    return D, S, R, [item.G for item in SGList], [item.R for item in SGList]
             
     
             
@@ -245,7 +261,7 @@ def generateUncertainGraph():
     G.add_edge(11,13)
     #G = addProb(G)
     for a,b in G.edges():
-        value = 1
+        value = 0.8
         G.edge[a][b]['prob'] = value
     return G
     
