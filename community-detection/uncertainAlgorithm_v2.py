@@ -14,6 +14,10 @@ import random
 from evaluate import calculateR
 import evaluate
 import uncertainAlgorithm_v1 as uav1
+import os, sys
+
+sys.path.append(os.getcwd()+'/python_mcl-master/mcl/')
+from mcl_clustering import mcl
 
 class Save(object):
     def __init__(self, label, RPrime, popNode, shareSNodeCount):
@@ -39,29 +43,31 @@ class SampleGraph(object):
 
 def main():
     # data 4
-    uncertainG = nx.Graph()
-    File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
-    for line in File:
-        edgeList = line.strip().split('\t')
-        uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
-    start = 'SSP2'
+    #uncertainG = nx.Graph()
+    #File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
+    #for line in File:
+    #    edgeList = line.strip().split('\t')
+    #    uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+    #start = 'SSP2'
     # data 3
     #G = nx.read_gml("football_edit.gml")
-    #uncertainG = addProb(G,prob=0.9,percent=0.45)
+    #uncertainG = addProb(G,prob=0.9,percent=0.15)
+    #start = G.nodes()[random.randint(0,len(G.nodes()))]
     #start = 'Kent'
     # data 2
-    #uncertainG = nx.karate_club_graph()
-    #uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
-    #start = 1
+    uncertainG = nx.karate_club_graph()
+    uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
+    start = 1
     # data 1
     #uncertainG = generateUncertainGraph()
-    #start = 1
+    #start = 13
     D, S, R, GList, SGR, SGList = localCommunityIdentification(uncertainG,start,100)
     #print D, S, R
     print D
     print R
     #print SGR
     GList = evaluate.sampleGraph(uncertainG,100)
+    
     RList = []
     for item in GList:
         RList.append(calculateR(item,D))
@@ -73,6 +79,19 @@ def main():
     for item in GList:
         RList2.append(calculateR(item,D2))
     print sum(RList2)/100.
+
+    a = nx.adjacency_matrix(uncertainG,weight='prob')
+    b = np.array(a.toarray())
+    M,cluster = mcl(b)
+    D3 = set()
+    for index,item in enumerate(M[0]):
+        if item > 0.98:
+            D3.add(index)
+    print D3
+    RList3 = []
+    for item in GList:
+        RList3.append(calculateR(item,D3))
+    print sum(RList3)/100.
 #==============================================================================
 #     # 验算计算过程
 #     while True:
@@ -194,7 +213,7 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                     save.tempBTotal = tempBTotal
                     save.removeSet = removeSet
                     tempSaveList.append(save)
-            checkedNodeSet.add(node)
+            checkedNodeSet.add(node) # 循环结束，所有的sampleG都处理完了node，再把node添加上去
             changeRPrime = 0
             changeShareSNodeCount = 0
             for i in xrange(sampleNumber):
