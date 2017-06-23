@@ -12,6 +12,8 @@ import networkx as nx
 import numpy as np
 import random
 from evaluate import calculateR
+import evaluate
+import uncertainAlgorithm_v1 as uav1
 
 class Save(object):
     def __init__(self, label, RPrime, popNode):
@@ -35,20 +37,58 @@ class SampleGraph(object):
         self.BTotal = BTotal
 
 def main():
-    while True:
-        uncertainG = generateUncertainGraph()
-        D, S, R, GList, SGR, SGList = localCommunityIdentification(uncertainG,13,100)
-        print D, S, R
-        print SGR
-        RList = []
-        for item in GList:
-            RList.append(calculateR(item,D))
-        print sum(RList)/100.
-        print RList
-        #if sum(RList)/100. == float(1):
-        #    break
-        if sum(RList)/100. != R:
-            return GList, SGList
+    # data 4
+    uncertainG = nx.Graph()
+    File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
+    for line in File:
+        edgeList = line.strip().split('\t')
+        uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+    start = 'DPH2'
+    # data 3
+    #G = nx.read_gml("football_edit.gml")
+    #uncertainG = addProb(G,prob=0.9,percent=0.45)
+    #start = 'Kent'
+    # data 2
+    #uncertainG = nx.karate_club_graph()
+    #uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
+    #start = 1
+    # data 1
+    #uncertainG = generateUncertainGraph()
+    #start = 1
+    D, S, R, GList, SGR, SGList = localCommunityIdentification(uncertainG,start,100)
+    #print D, S, R
+    print D
+    print R
+    #print SGR
+    GList = evaluate.sampleGraph(uncertainG,100)
+    RList = []
+    for item in GList:
+        RList.append(calculateR(item,D))
+    print sum(RList)/100.
+    #print RList
+    D2, _ = uav1.localCommunityIdentification(uncertainG,start)
+    print D2
+    RList2 = []
+    for item in GList:
+        RList2.append(calculateR(item,D2))
+    print sum(RList2)/100.
+#==============================================================================
+#     # 验算计算过程
+#     while True:
+#         uncertainG = generateUncertainGraph()
+#         D, S, R, GList, SGR, SGList = localCommunityIdentification(uncertainG,13,100)
+#         print D, S, R
+#         print SGR
+#         RList = []
+#         for item in GList:
+#             RList.append(calculateR(item,D))
+#         print sum(RList)/100.
+#         print RList
+#         #if sum(RList)/100. == float(1):
+#         #    break
+#         if sum(RList)/100. != R:
+#             return GList, SGList
+#==============================================================================
     
 def sampleGraphInit(uncertainG,node):
     sampleG = nx.Graph()
@@ -277,4 +317,4 @@ def generateUncertainGraph():
 #==============================================================================
     return G
     
-GList, SGList = main()
+main()
