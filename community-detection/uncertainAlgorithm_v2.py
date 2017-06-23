@@ -16,10 +16,11 @@ import evaluate
 import uncertainAlgorithm_v1 as uav1
 
 class Save(object):
-    def __init__(self, label, RPrime, popNode):
+    def __init__(self, label, RPrime, popNode, shareSNodeCount):
         self.label = label
         self.RPrime = RPrime
         self.popNode = popNode
+        self.shareSNodeCount = shareSNodeCount
         self.tempB = None
         self.tempBIn = None
         self.tempBTotal = None
@@ -43,7 +44,7 @@ def main():
     for line in File:
         edgeList = line.strip().split('\t')
         uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
-    start = 'DPH2'
+    start = 'SSP2'
     # data 3
     #G = nx.read_gml("football_edit.gml")
     #uncertainG = addProb(G,prob=0.9,percent=0.45)
@@ -135,6 +136,7 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
     while label:
         saveList = []
         RPrime = -float('inf')
+        ShareSNodeCount = -float('inf')
         shuffleList = list(S)
         random.shuffle(shuffleList)
         for node in shuffleList:
@@ -143,17 +145,18 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                 SG = SGList[i]
                 SG = sampleGraph(uncertainG,SG,node,checkedNodeSet)
                 SGList[i] = SG
+                tempShareSNodeCount = len(set(SG.G[node].keys()).intersection(SG.S))
                 if node not in SG.S: # 脱离了之前的community
                     # 更新SG的各项参数，之后确定要更新的时候再更新
                     if SG.BTotal+len(SG.G[node]) == 0:
                         if SG.R == 0: # 孤立点和孤立点（有没有link都是）
-                            save = Save(False, 0, node)
+                            save = Save(False, 0, node, tempShareSNodeCount)
                         else: # 之前已经形成community，且该community没有向外的link，且添加了一个没有向外link的一个点，极少出现的情况
                         # 似乎还缺少考虑一种情况：之前已经形成community，且该community没有向外的link，添加了一个向外有link的点
                         # 和evaluate.py里已经相同处理   
-                            save = Save(False, 1, node)
+                            save = Save(False, 1, node, tempShareSNodeCount)
                     else: # 之前已经形成一个community了，现在有一个孤立点
-                        save = Save(False, float(SG.BIn)/float(SG.BTotal+len(SG.G[node])), node)
+                        save = Save(False, float(SG.BIn)/float(SG.BTotal+len(SG.G[node])), node, tempShareSNodeCount)
                     tempSaveList.append(save)
                 else:
                     tempSet = set(SG.G[node].keys())
@@ -185,7 +188,7 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                     else:
                         tempRPrime = float(tempBIn)/float(tempBTotal)
                     #tempShellNodeCount = len(set(G[node].keys()).intersection(S))
-                    save = Save(True, tempRPrime, node)
+                    save = Save(True, tempRPrime, node, tempShareSNodeCount)
                     save.tempB = tempB
                     save.tempBIn = tempBIn
                     save.tempBTotal = tempBTotal
@@ -193,12 +196,21 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                     tempSaveList.append(save)
             checkedNodeSet.add(node)
             changeRPrime = 0
+            changeShareSNodeCount = 0
             for i in xrange(sampleNumber):
                 changeRPrime += tempSaveList[i].RPrime
+                changeShareSNodeCount += tempSaveList[i].shareSNodeCount
             changeRPrime = float(changeRPrime)/float(sampleNumber)
-            if changeRPrime > RPrime:
-                saveList = tempSaveList
-                RPrime = changeRPrime
+            if len(D) == 1:
+                if changeShareSNodeCount > ShareSNodeCount or (changeShareSNodeCount == ShareSNodeCount and changeRPrime > RPrime):
+                    saveList = tempSaveList
+                    RPrime = changeRPrime
+                    ShareSNodeCount = changeShareSNodeCount
+            else:
+                if changeRPrime > RPrime or (changeRPrime == RPrime and changeShareSNodeCount > ShareSNodeCount):
+                    saveList = tempSaveList
+                    RPrime = changeRPrime
+                    ShareSNodeCount = changeShareSNodeCount
         if RPrime > R:
             R = RPrime
             node = saveList[0].popNode
