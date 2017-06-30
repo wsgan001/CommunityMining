@@ -15,6 +15,7 @@ from evaluate import calculateR
 import evaluate
 import uncertainAlgorithm_v1 as uav1
 import os, sys
+import cmty
 
 sys.path.append(os.getcwd()+'/python_mcl-master/mcl/')
 from mcl_clustering import mcl
@@ -118,17 +119,18 @@ def main():
     A2R = []
     A3R = []
     A4R = []
+    A5R = []
+    GList = evaluate.sampleGraph(uncertainG,100)
     for start in uncertainG.nodes():
         # data 1
         #uncertainG = generateUncertainGraph()
         #start = 13
-        D, S, R, GList, SGR, SGList = localCommunityIdentification(uncertainG,start,100)
+        D, S, R, _, SGR, SGList = localCommunityIdentification(uncertainG,start,100)
         #print D, S, R
         print D
         print R
         A0R.append(R)
         #print SGR
-        GList = evaluate.sampleGraph(uncertainG,100)
         
         RList = []
         for item in GList:
@@ -145,6 +147,7 @@ def main():
         print sum(RList2)/100.
         A2R.append(sum(RList2)/100.)
     
+        # MCL algorithm
         a = nx.adjacency_matrix(uncertainG,weight='prob')
         b = np.array(a.toarray())
         M,cluster = mcl(b)
@@ -158,7 +161,8 @@ def main():
             RList3.append(calculateR(item,D3))
         print sum(RList3)/100.
         A3R.append(sum(RList3)/100.)
-    
+        
+    # Louvain Community Detection
     A4Result = community.best_partition(uncertainG,weight='prob')
     A4Dict = {}
     for item in A4Result:
@@ -172,19 +176,34 @@ def main():
         for item in GList:
             RList4.append(calculateR(item,D4))
         A4R.append(sum(RList4)/100.)
-        
-        
+    
+    # Girvan-Newman community detection algorithm
+    for (a,b) in uncertainG.edges():
+        uncertainG[a][b]['weight'] = 1.0 / (uncertainG[a][b]['prob']**0.3)
+    A5Dict = cmty.main(uncertainG)
+    A5Result = {}
+    for group in A5Dict:
+        for node in A5Dict[group]:
+            A5Result[node] = group
+    for start in uncertainG.nodes():
+        RList5 = []
+        D5 = A5Dict[A5Result[start]]
+        for item in GList:
+            RList5.append(calculateR(item,D5))
+        A5R.append(sum(RList5)/100.)
         
     print A0R
     print A1R
     print A2R
     print A3R
     print A4R
+    print A5R
     print sum(A0R)/len(A0R)
     print sum(A1R)/len(A1R)
     print sum(A2R)/len(A2R)
     print sum(A3R)/len(A3R)
     print sum(A4R)/len(A4R)
+    print sum(A5R)/len(A5R)
 #==============================================================================
 #     # 验算计算过程
 #     while True:
