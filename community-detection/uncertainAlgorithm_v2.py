@@ -19,6 +19,9 @@ import os, sys
 sys.path.append(os.getcwd()+'/python_mcl-master/mcl/')
 from mcl_clustering import mcl
 
+sys.path.append(os.getcwd()+'/python-louvain/')
+import community
+
 class Save(object):
     def __init__(self, label, RPrime, popNode, shareSNodeCount):
         self.label = label
@@ -114,6 +117,7 @@ def main():
     A1R = []
     A2R = []
     A3R = []
+    A4R = []
     for start in uncertainG.nodes():
         # data 1
         #uncertainG = generateUncertainGraph()
@@ -154,15 +158,33 @@ def main():
             RList3.append(calculateR(item,D3))
         print sum(RList3)/100.
         A3R.append(sum(RList3)/100.)
+    
+    A4Result = community.best_partition(uncertainG,weight='prob')
+    A4Dict = {}
+    for item in A4Result:
+        if A4Result[item] not in A4Dict:
+            A4Dict[A4Result[item]] = set([item])
+        else:
+            A4Dict[A4Result[item]].add(item)
+    for start in uncertainG.nodes():
+        RList4 = []
+        D4 = A4Dict[A4Result[start]]
+        for item in GList:
+            RList4.append(calculateR(item,D4))
+        A4R.append(sum(RList4)/100.)
+        
+        
         
     print A0R
     print A1R
     print A2R
     print A3R
+    print A4R
     print sum(A0R)/len(A0R)
     print sum(A1R)/len(A1R)
     print sum(A2R)/len(A2R)
     print sum(A3R)/len(A3R)
+    print sum(A4R)/len(A4R)
 #==============================================================================
 #     # 验算计算过程
 #     while True:
