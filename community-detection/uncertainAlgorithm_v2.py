@@ -41,7 +41,7 @@ class SampleGraph(object):
         self.BIn = BIn
         self.BTotal = BTotal
 
-def main():
+def main2():
     # data 4
     #uncertainG = nx.Graph()
     #File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
@@ -92,6 +92,77 @@ def main():
     for item in GList:
         RList3.append(calculateR(item,D3))
     print sum(RList3)/100.
+
+
+def main():
+    # data 4
+    #uncertainG = nx.Graph()
+    #File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
+    #for line in File:
+    #    edgeList = line.strip().split('\t')
+    #    uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+    #start = 'SSP2'
+    # data 3
+    #G = nx.read_gml("football_edit.gml")
+    #uncertainG = addProb(G,prob=0.9,percent=0.15)
+    #start = G.nodes()[random.randint(0,len(G.nodes()))]
+    #start = 'Kent'
+    # data 2
+    uncertainG = nx.karate_club_graph()
+    uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
+    A0R = []
+    A1R = []
+    A2R = []
+    A3R = []
+    for start in uncertainG.nodes():
+        # data 1
+        #uncertainG = generateUncertainGraph()
+        #start = 13
+        D, S, R, GList, SGR, SGList = localCommunityIdentification(uncertainG,start,100)
+        #print D, S, R
+        print D
+        print R
+        A0R.append(R)
+        #print SGR
+        GList = evaluate.sampleGraph(uncertainG,100)
+        
+        RList = []
+        for item in GList:
+            RList.append(calculateR(item,D))
+        print sum(RList)/100.
+        A1R.append(sum(RList)/100.)
+        
+        #print RList
+        D2, _ = uav1.localCommunityIdentification(uncertainG,start)
+        print D2
+        RList2 = []
+        for item in GList:
+            RList2.append(calculateR(item,D2))
+        print sum(RList2)/100.
+        A2R.append(sum(RList2)/100.)
+    
+        a = nx.adjacency_matrix(uncertainG,weight='prob')
+        b = np.array(a.toarray())
+        M,cluster = mcl(b)
+        D3 = set()
+        for index,item in enumerate(M[0]):
+            if item > 0.98:
+                D3.add(index)
+        print D3
+        RList3 = []
+        for item in GList:
+            RList3.append(calculateR(item,D3))
+        print sum(RList3)/100.
+        A3R.append(sum(RList3)/100.)
+        
+    print A0R
+    print A1R
+    print A2R
+    print A3R
+    print sum(A0R)/len(A0R)
+    print sum(A1R)/len(A1R)
+    print sum(A2R)/len(A2R)
+    print sum(A3R)/len(A3R)
 #==============================================================================
 #     # 验算计算过程
 #     while True:
