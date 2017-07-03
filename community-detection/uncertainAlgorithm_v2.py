@@ -107,13 +107,15 @@ def main():
     #    uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
     #start = 'SSP2'
     # data 3
-    #G = nx.read_gml("football_edit.gml")
-    #uncertainG = addProb(G,prob=0.9,percent=0.15)
+    G = nx.read_gml("football_edit.gml")
+    #G = nx.read_gml("dolphin_edit.gml"#)
+    uncertainG = addProb(G,prob=0.75,percent=0.25)
     #start = G.nodes()[random.randint(0,len(G.nodes()))]
     #start = 'Kent'
     # data 2
-    uncertainG = nx.karate_club_graph()
-    uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
+    #uncertainG = nx.karate_club_graph()
+    #uncertainG = nx.random_partition_graph([10]*8,0.2,0.02)
+    #uncertainG = addProb(uncertainG,prob=0.8,percent=0.25)
     A0R = []
     A1R = []
     A2R = []
@@ -138,6 +140,9 @@ def main():
         print sum(RList)/100.
         A1R.append(sum(RList)/100.)
         
+        if sum(RList)/100. == 0:
+            return D, S, R, _, SGR, SGList, uncertainG, GList
+        
         #print RList
         D2, _ = uav1.localCommunityIdentification(uncertainG,start)
         print D2
@@ -147,20 +152,22 @@ def main():
         print sum(RList2)/100.
         A2R.append(sum(RList2)/100.)
     
-        # MCL algorithm
-        a = nx.adjacency_matrix(uncertainG,weight='prob')
-        b = np.array(a.toarray())
-        M,cluster = mcl(b)
-        D3 = set()
-        for index,item in enumerate(M[0]):
-            if item > 0.98:
-                D3.add(index)
-        print D3
-        RList3 = []
-        for item in GList:
-            RList3.append(calculateR(item,D3))
-        print sum(RList3)/100.
-        A3R.append(sum(RList3)/100.)
+#==============================================================================
+#         # MCL algorithm
+#         a = nx.adjacency_matrix(uncertainG,weight='prob')
+#         b = np.array(a.toarray())
+#         M,cluster = mcl(b)
+#         D3 = set()
+#         for index,item in enumerate(M[0]):
+#             if item > 0.98:
+#                 D3.add(index)
+#         print D3
+#         RList3 = []
+#         for item in GList:
+#             RList3.append(calculateR(item,D3))
+#         print sum(RList3)/100.
+#         A3R.append(sum(RList3)/100.)
+#==============================================================================
         
     # Louvain Community Detection
     A4Result = community.best_partition(uncertainG,weight='prob')
@@ -177,33 +184,37 @@ def main():
             RList4.append(calculateR(item,D4))
         A4R.append(sum(RList4)/100.)
     
-    # Girvan-Newman community detection algorithm
-    for (a,b) in uncertainG.edges():
-        uncertainG[a][b]['weight'] = 1.0 / (uncertainG[a][b]['prob']**0.3)
-    A5Dict = cmty.main(uncertainG)
-    A5Result = {}
-    for group in A5Dict:
-        for node in A5Dict[group]:
-            A5Result[node] = group
-    for start in uncertainG.nodes():
-        RList5 = []
-        D5 = A5Dict[A5Result[start]]
-        for item in GList:
-            RList5.append(calculateR(item,D5))
-        A5R.append(sum(RList5)/100.)
+#==============================================================================
+#     # Girvan-Newman community detection algorithm
+#     for (a,b) in uncertainG.edges():
+#         uncertainG[a][b]['weight'] = 1.0 / (uncertainG[a][b]['prob']**0.3)
+#     A5Dict = cmty.main(uncertainG)
+#     A5Result = {}
+#     for group in A5Dict:
+#         for node in A5Dict[group]:
+#             A5Result[node] = group
+#     for start in uncertainG.nodes():
+#         RList5 = []
+#         D5 = A5Dict[A5Result[start]]
+#         for item in GList:
+#             RList5.append(calculateR(item,D5))
+#         A5R.append(sum(RList5)/100.)
+#==============================================================================
         
     print A0R
     print A1R
     print A2R
-    print A3R
+    #print A3R
     print A4R
-    print A5R
+    #print A5R
     print sum(A0R)/len(A0R)
     print sum(A1R)/len(A1R)
     print sum(A2R)/len(A2R)
-    print sum(A3R)/len(A3R)
+    #print sum(A3R)/len(A3R)
     print sum(A4R)/len(A4R)
-    print sum(A5R)/len(A5R)
+    #print sum(A5R)/len(A5R)
+    
+    return A4Dict, uncertainG
 #==============================================================================
 #     # 验算计算过程
 #     while True:
@@ -332,7 +343,14 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                 changeRPrime += tempSaveList[i].RPrime
                 changeShareSNodeCount += tempSaveList[i].shareSNodeCount
             changeRPrime = float(changeRPrime)/float(sampleNumber)
-            if len(D) == 1:
+#==============================================================================
+#             print ShareSNodeCount
+#             print changeShareSNodeCount
+#             print changeRPrime
+#             print RPrime
+#             print node
+#==============================================================================
+            if len(D) == 1 and changeRPrime!= 0:#changeRPrime可能是0，但ShareSNodeCount很大，原因是node和之前的node之间概率很小
                 if changeShareSNodeCount > ShareSNodeCount or (changeShareSNodeCount == ShareSNodeCount and changeRPrime > RPrime):
                     saveList = tempSaveList
                     RPrime = changeRPrime
@@ -460,4 +478,5 @@ def generateUncertainGraph():
 #==============================================================================
     return G
     
-main()
+A4Dict, uncertainG = main()
+#D, S, R, _, SGR, SGList, uncertainG, GList = main()
