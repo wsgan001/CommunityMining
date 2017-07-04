@@ -107,32 +107,37 @@ def main():
     #    uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
     #start = 'SSP2'
     # data 3
-    G = nx.read_gml("football_edit.gml")
-    #G = nx.read_gml("dolphin_edit.gml"#)
-    uncertainG = addProb(G,prob=0.75,percent=0.25)
+    #G = nx.read_gml("football_edit.gml")
+    #G = nx.read_gml("dolphin_edit.gml")
+    #uncertainG = addProb(G,prob=0.75,percent=0.25)
     #start = G.nodes()[random.randint(0,len(G.nodes()))]
-    #start = 'Kent'
+    #start = 'Kent'a
     # data 2
     #uncertainG = nx.karate_club_graph()
-    #uncertainG = nx.random_partition_graph([10]*8,0.2,0.02)
-    #uncertainG = addProb(uncertainG,prob=0.8,percent=0.25)
+    uncertainG = nx.random_partition_graph([10]*8,0.4,0.02)
+    uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
     A0R = []
     A1R = []
     A2R = []
     A3R = []
     A4R = []
     A5R = []
+    A1Dict = {}
     GList = evaluate.sampleGraph(uncertainG,100)
     for start in uncertainG.nodes():
         # data 1
         #uncertainG = generateUncertainGraph()
         #start = 13
         D, S, R, _, SGR, SGList = localCommunityIdentification(uncertainG,start,100)
+        A1Dict[start] = D
         #print D, S, R
         print D
         print R
         A0R.append(R)
         #print SGR
+        if R == 0:
+            #return D, S, R, _, SGR, SGList, uncertainG, GList
+            return GList, "", uncertainG
         
         RList = []
         for item in GList:
@@ -214,7 +219,7 @@ def main():
     print sum(A4R)/len(A4R)
     #print sum(A5R)/len(A5R)
     
-    return A4Dict, uncertainG
+    return A1Dict, A4Dict, uncertainG
 #==============================================================================
 #     # 验算计算过程
 #     while True:
@@ -478,5 +483,5 @@ def generateUncertainGraph():
 #==============================================================================
     return G
     
-A4Dict, uncertainG = main()
+A1Dict, A4Dict, uncertainG = main()
 #D, S, R, _, SGR, SGList, uncertainG, GList = main()
