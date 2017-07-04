@@ -100,22 +100,23 @@ def main2():
 
 def main():
     # data 4
-    #uncertainG = nx.Graph()
-    #File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
-    #for line in File:
-    #    edgeList = line.strip().split('\t')
-    #    uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+    uncertainG = nx.Graph()
+    File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
+    for line in File:
+        edgeList = line.strip().split('\t')
+        uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
     #start = 'SSP2'
     # data 3
     #G = nx.read_gml("football_edit.gml")
     #G = nx.read_gml("dolphin_edit.gml")
     #uncertainG = addProb(G,prob=0.75,percent=0.25)
+    #uncertainG = addProb(G,prob=0.9,percent=0.15)
     #start = G.nodes()[random.randint(0,len(G.nodes()))]
     #start = 'Kent'a
     # data 2
     #uncertainG = nx.karate_club_graph()
-    uncertainG = nx.random_partition_graph([10]*8,0.4,0.02)
-    uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
+    #uncertainG = nx.random_partition_graph([10]*8,0.4,0.02)
+    #uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
     A0R = []
     A1R = []
     A2R = []
@@ -124,7 +125,11 @@ def main():
     A5R = []
     A1Dict = {}
     GList = evaluate.sampleGraph(uncertainG,100)
-    for start in uncertainG.nodes():
+    print "finish sampling"
+    testList = list(uncertainG.nodes())
+    random.shuffle(testList)
+    testList = testList[:300]
+    for start in testList:#uncertainG.nodes():
         # data 1
         #uncertainG = generateUncertainGraph()
         #start = 13
@@ -176,13 +181,15 @@ def main():
         
     # Louvain Community Detection
     A4Result = community.best_partition(uncertainG,weight='prob')
+    print "finish algorithm"
     A4Dict = {}
     for item in A4Result:
         if A4Result[item] not in A4Dict:
             A4Dict[A4Result[item]] = set([item])
         else:
             A4Dict[A4Result[item]].add(item)
-    for start in uncertainG.nodes():
+    print "finish calculation"
+    for start in testList:#uncertainG.nodes():
         RList4 = []
         D4 = A4Dict[A4Result[start]]
         for item in GList:
@@ -339,10 +346,10 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
                         tempRPrime = float(tempBIn)/float(tempBTotal)
                     #tempShellNodeCount = len(set(G[node].keys()).intersection(S))
                     save = Save(True, tempRPrime, node, tempShareSNodeCount)
-                    save.tempB = dict(tempB)
+                    save.tempB = dict(tempB) # v2版本这里没加dict
                     save.tempBIn = tempBIn
                     save.tempBTotal = tempBTotal
-                    save.removeSet = set(removeSet)
+                    save.removeSet = set(removeSet) # v2版本这里没加set
                     tempSaveList.append(save)
             checkedNodeSet.add(node) # 循环结束，所有的sampleG都处理完了node，再把node添加上去
             changeRPrime = 0
@@ -412,7 +419,7 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
             DMax = set(D)
             RMax = R
             NotMaxCount = 0
-        elif NotMaxCount < 1:
+        elif NotMaxCount < 6 and len(saveList) > 0: #见line421
             R = RPrime # 只是简单的复制粘贴，可能还有部分是多余的
             node = saveList[0].popNode #要是有个点是孤立的，这里会挂（saveList是空的）
             D.add(node)
