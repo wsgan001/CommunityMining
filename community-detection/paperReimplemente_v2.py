@@ -161,7 +161,11 @@ def localCommunityIdentification(G,startNode):
             DMax = set(D)
             NotMaxCount = 0
             RMax = R
-        elif NotMaxCount < 0:# and len(S) > 1:
+        elif NotMaxCount < 10:# or RPrime > R:# and len(S) > 1:
+#==============================================================================
+#             if RPrime > R:
+#                 NotMaxCount = 0
+#==============================================================================
             print S
             print popNodeList
             print RPrime
@@ -191,30 +195,28 @@ def localCommunityIdentification(G,startNode):
             label = False
     return DMax, S
     
-#==============================================================================
-# G = nx.Graph()
-# File = open("binary_networks/network.dat","r")
-# for line in File:
-#     nodeA, nodeB = line.strip().split("\t")
-#     G.add_edge(int(nodeA),int(nodeB))
-# dic = {}
-# label = {}
-# File = open("binary_networks/community.dat","r")
-# for line in File:
-#     node, community = line.strip().split("\t")
-#     label[int(node)] = int(community)
-#     if int(community) not in dic:
-#         dic[int(community)] = set([int(node)])
-#     else:
-#         dic[int(community)].add(int(node))
-# start = 8
-# result = localCommunityIdentification(G,start)
-# print result
-# print len(result[0])
-# print len(dic[label[start]])
-# intersection = result[0].intersection(dic[label[start]])
-# print len(intersection)
-#==============================================================================
+G = nx.Graph()
+File = open("binary_networks/network.dat","r")
+for line in File:
+    nodeA, nodeB = line.strip().split("\t")
+    G.add_edge(int(nodeA),int(nodeB))
+dic = {}
+label = {}
+File = open("binary_networks/community.dat","r")
+for line in File:
+    node, community = line.strip().split("\t")
+    label[int(node)] = int(community)
+    if int(community) not in dic:
+        dic[int(community)] = set([int(node)])
+    else:
+        dic[int(community)].add(int(node))
+start = 6
+result = localCommunityIdentification(G,start)
+print result
+print len(result[0])
+print len(dic[label[start]])
+intersection = result[0].intersection(dic[label[start]])
+print len(intersection)
 #==============================================================================
 # G = nx.read_gml("network.gml")
 # start = 5
@@ -233,37 +235,39 @@ def localCommunityIdentification(G,startNode):
 # print len(intersection)
 #==============================================================================
     
-G = nx.Graph()
-G.add_edge(1,2)
-G.add_edge(1,3)
-G.add_edge(1,4)
-G.add_edge(2,3)
-G.add_edge(2,4)
-G.add_edge(2,13)
-G.add_edge(3,4)
-G.add_edge(3,7)
-G.add_edge(3,13)
-G.add_edge(4,9)
-G.add_edge(4,13)
-G.add_edge(5,6)
-G.add_edge(5,7)
-G.add_edge(5,8)
-G.add_edge(5,13)
-G.add_edge(6,7)
-G.add_edge(6,8)
-G.add_edge(6,10)
-G.add_edge(6,13)
-G.add_edge(7,8)
-G.add_edge(7,13)
-G.add_edge(9,10)
-G.add_edge(9,11)
-G.add_edge(9,12)
-G.add_edge(10,11)
-G.add_edge(10,12)
-G.add_edge(11,12)
-G.add_edge(11,13)
-start = 13
-print localCommunityIdentification(G,start)[0]
+#==============================================================================
+# G = nx.Graph()
+# G.add_edge(1,2)
+# G.add_edge(1,3)
+# G.add_edge(1,4)
+# G.add_edge(2,3)
+# G.add_edge(2,4)
+# G.add_edge(2,13)
+# G.add_edge(3,4)
+# G.add_edge(3,7)
+# G.add_edge(3,13)
+# G.add_edge(4,9)
+# G.add_edge(4,13)
+# G.add_edge(5,6)
+# G.add_edge(5,7)
+# G.add_edge(5,8)
+# G.add_edge(5,13)
+# G.add_edge(6,7)
+# G.add_edge(6,8)
+# G.add_edge(6,10)
+# G.add_edge(6,13)
+# G.add_edge(7,8)
+# G.add_edge(7,13)
+# G.add_edge(9,10)
+# G.add_edge(9,11)
+# G.add_edge(9,12)
+# G.add_edge(10,11)
+# G.add_edge(10,12)
+# G.add_edge(11,12)
+# G.add_edge(11,13)
+# start = 2
+# print localCommunityIdentification(G,start)[0]
+#==============================================================================
 #==============================================================================
 # G = generateGraph()
 # start = 7
