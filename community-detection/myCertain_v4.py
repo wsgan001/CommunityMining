@@ -10,6 +10,7 @@ Created on Thu Jul 13 15:44:54 2017
 # paper reimplementation
 
 import networkx as nx
+import numpy as np
 import random
 
 class Save(object):
@@ -70,6 +71,7 @@ def localCommunityIdentification(G,startNode):
     previousRemove = set()
     label = True
     R = 0
+    K = 0
     BIn = 0
     BTotal = len(G[startNode])
     while label:
@@ -104,11 +106,14 @@ def localCommunityIdentification(G,startNode):
             tempBTotal = BTotal + deltaTotal - deltaPrime
             tempRPrime = float(tempBIn)/float(tempBTotal)
             
+            #tempSTotal = len(set(G[node].keys()).difference(D).union(S)) 
+            
             NodeIn = len(set(G[node].keys()).intersection(D))
             NodeShell = len(set(G[node].keys()).intersection(S))
             tempKPrime = float(NodeIn+NodeShell)/float(len(G[node].keys()))
+            #tempKPrime = float(NodeIn+NodeShell)/float(tempSTotal)
             
-            if tempKPrime > 0.5: # 加上结果会干净很多
+            if tempKPrime >= (1-np.exp(-len(D)))*0.5:#min(len(D),3)*0.166: #0.5 or (len(D) <= 3 and tempRPrime >= R): # 加上结果会干净很多
                 save = Save(tempRPrime, tempKPrime, node, tempB, tempBIn, tempBTotal, removeSet)
                 saveList.append(save)            
 
@@ -134,6 +139,7 @@ def localCommunityIdentification(G,startNode):
                     S = S.union(difference)
                 previousRemove = previousRemove.union(saveRemoveSet)
                 R = save.RPrime
+                K = save.KPrime
                 BIn = saveBIn
                 BTotal = saveBTotal
                 checkLabel = True
@@ -196,7 +202,8 @@ def localCommunityIdentification(G,startNode):
 #==============================================================================
 # G = generateGraph()
 # start = 7
-# result = iterativeExpansion(G,start)
+# #result = iterativeExpansion(G,start)
+# result,_ = localCommunityIdentification(G,start)
 # print result
 #==============================================================================
 # #==============================================================================
@@ -221,8 +228,22 @@ def localCommunityIdentification(G,startNode):
 #==============================================================================
 G = nx.read_gml("football_edit.gml")
 #start = 'Kent'
+dic = {}
+for node in G.nodes():
+    label = G.node[node]['value']
+    if label not in dic:
+        dic[label] = set([node])
+    else:
+        dic[label].add(node)
+number = 0
 for start in G.nodes():
     result,_ = localCommunityIdentification(G,start)
+    print number
+    number += 1
+    label = G.node[start]['value']
+    print "label: " + str(label)
+    print "node in this label: " + str(len(dic[label]))
+    print "node actually in this label: " + str(len(result))
     for item in result:
         print G.node[item]
     print "**********************"
