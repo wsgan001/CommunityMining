@@ -20,6 +20,7 @@ Created on Thu Jul 13 15:44:54 2017
 import networkx as nx
 import numpy as np
 import random
+import uncertainAlgorithm_v1 as uA1
 
 class Save(object):
     def __init__(self, RPrime, KPrime, popNode, tempB, tempBIn, tempBTotal, removeSet):
@@ -137,11 +138,11 @@ def localCommunityIdentification(G,startNode):
             #tempSTotal = len(set(G[node].keys()).difference(D).union(S)) 
             
             NodeIn = helperA(node,D)#len(set(G[node].keys()).intersection(D))
-            NodeShell = helperC(node,S)#len(set(G[node].keys()).intersection(S))
+            NodeShell = helperC(node,S)#helperA(node,S)#len(set(G[node].keys()).intersection(S))
             tempKPrime = float(NodeIn+NodeShell)/float(helperB(node))
             #tempKPrime = float(NodeIn+NodeShell)/float(tempSTotal)
             
-            if tempKPrime >= (1-np.exp(-len(D)))*0.5:#min(len(D),3)*0.166: #0.5 or (len(D) <= 3 and tempRPrime >= R): # 加上结果会干净很多
+            if tempKPrime >= (1-np.exp(-len(D)/2.))*0.5:#min(len(D),3)*0.166: #0.5 or (len(D) <= 3 and tempRPrime >= R): # 加上结果会干净很多
                 save = Save(tempRPrime, tempKPrime, node, tempB, tempBIn, tempBTotal, removeSet)
                 saveList.append(save)            
 
@@ -182,6 +183,30 @@ def localCommunityIdentification(G,startNode):
         if checkLabel == False:
             label = False
     return D, S
+    
+def addProb(G,prob=0.9,percent=0.15):
+    for a,b in G.edges():
+        value = 0.5 * np.random.randn() + prob
+        while value <= 0 or value > 1:
+            value = 0.5 * np.random.randn() + prob
+        G.edge[a][b]['prob'] = value
+    count = 0
+    countNumber = percent * len(G.edges())
+    nodeList = G.nodes()
+    nodeNumber = len(nodeList)
+    while count < countNumber:
+        nodeA = nodeList[np.random.randint(nodeNumber)]
+        nodeB = nodeList[np.random.randint(nodeNumber)]
+        while nodeA == nodeB or nodeB in G[nodeA]:
+            nodeB = nodeList[np.random.randint(nodeNumber)]
+            
+        value = 0.5 * np.random.randn() + (1-prob)
+        while value <= 0 or value > 1:
+            value = 0.5 * np.random.randn() + (1-prob)
+    
+        G.add_edge(nodeA,nodeB,prob=value)
+        count += 1
+    return G
     
 #==============================================================================
 # G = nx.read_gml("network.gml")
@@ -262,8 +287,9 @@ def localCommunityIdentification(G,startNode):
 #     print '*******************'
 #==============================================================================
 G = nx.read_gml("football_edit.gml")
-for a,b in G.edges():
-    G.edge[a][b]['prob'] = 1
+G = addProb(G,prob=0.8,percent=0.35)
+#for a,b in G.edges():
+#    G.edge[a][b]['prob'] = 1
 #start = 'Kent'
 dic = {}
 for node in G.nodes():
@@ -273,17 +299,45 @@ for node in G.nodes():
     else:
         dic[label].add(node)
 number = 0
+TP1 = 0
+TPFN1 = 0
+TPFP1 = 0
+TP2 = 0
+TPFN2 = 0
+TPFP2 = 0
 for start in G.nodes():
-    result,_ = localCommunityIdentification(G,start)
     print number
     number += 1
+    
+    result,_ = localCommunityIdentification(G,start)
     label = G.node[start]['value']
     print "label: " + str(label)
     print "node in this label: " + str(len(dic[label]))
     print "node actually in this label: " + str(len(result))
+    TPFN1 += len(dic[label])
+    TPFP1 += len(result)
     for item in result:
         print G.node[item]
+        if G.node[item]['value'] == label:
+            TP1 += 1
+    print "----------------------"
+    
+    result,_ = uA1.localCommunityIdentification(G,start)
+    label = G.node[start]['value']
+    print "label: " + str(label)
+    print "node in this label: " + str(len(dic[label]))
+    print "node actually in this label: " + str(len(result))
+    TPFN2 += len(dic[label])
+    TPFP2 += len(result)
+    for item in result:
+        print G.node[item]
+        if G.node[item]['value'] == label:
+            TP2 += 1
     print "**********************"
+print "Evaluation: 正确被检索的/应该检索到的  正确被检索的/实际被检索到的"
+print "algorithm1: "+str(float(TP1)/float(TPFN1))+'    '+str(float(TP1)/float(TPFP1))
+print "algorithm2: "+str(float(TP2)/float(TPFN2))+'    '+str(float(TP2)/float(TPFP2))
+    
             
 #==============================================================================
 # G = nx.Graph()
