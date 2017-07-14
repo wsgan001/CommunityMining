@@ -16,6 +16,7 @@ import evaluate
 import uncertainAlgorithm_v1 as uav1
 import os, sys
 import cmty
+import myUncertain_v1 as mU1
 
 sys.path.append(os.getcwd()+'/python_mcl-master/mcl/')
 from mcl_clustering import mcl
@@ -60,7 +61,7 @@ def main2():
     #start = 'Kent'
     # data 2
     uncertainG = nx.karate_club_graph()
-    uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
+    uncertainG = addProb(uncertainG,prob=0.8,percent=0.35)
     start = 1
     # data 1
     #uncertainG = generateUncertainGraph()
@@ -100,17 +101,19 @@ def main2():
 
 def main():
     # data 4
-    uncertainG = nx.Graph()
-    File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
-    for line in File:
-        edgeList = line.strip().split('\t')
-        uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+#==============================================================================
+#     uncertainG = nx.Graph()
+#     File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
+#     for line in File:
+#         edgeList = line.strip().split('\t')
+#         uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+#==============================================================================
     #start = 'SSP2'
     # data 3
-    #G = nx.read_gml("football_edit.gml")
+    G = nx.read_gml("football_edit.gml")
     #G = nx.read_gml("dolphin_edit.gml")
     #uncertainG = addProb(G,prob=0.75,percent=0.25)
-    #uncertainG = addProb(G,prob=0.9,percent=0.15)
+    uncertainG = addProb(G,prob=0.9,percent=0.15)
     #start = G.nodes()[random.randint(0,len(G.nodes()))]
     #start = 'Kent'a
     # data 2
@@ -123,6 +126,8 @@ def main():
     A3R = []
     A4R = []
     A5R = []
+    A6R = []
+    A7R = []
     A1Dict = {}
     GList = evaluate.sampleGraph(uncertainG,100)
     print "finish sampling"
@@ -155,12 +160,29 @@ def main():
         
         #print RList
         D2, _ = uav1.localCommunityIdentification(uncertainG,start)
+        #D2, _ = mU1.localCommunityIdentification(uncertainG,start)
         print D2
         RList2 = []
         for item in GList:
             RList2.append(calculateR(item,D2))
         print sum(RList2)/100.
         A2R.append(sum(RList2)/100.)
+        
+        D6, _ = mU1.localCommunityIdentification(uncertainG,start)
+        print D6
+        RList6 = []
+        for item in GList:
+            RList6.append(calculateR(item,D6))
+        print sum(RList6)/100.
+        A6R.append(sum(RList6)/100.)
+        
+        D7, _ = mU1.localCommunityIdentification(uncertainG,start,False)
+        print D7
+        RList7 = []
+        for item in GList:
+            RList7.append(calculateR(item,D7))
+        print sum(RList7)/100.
+        A7R.append(sum(RList7)/100.)
     
 #==============================================================================
 #         # MCL algorithm
@@ -219,13 +241,16 @@ def main():
     #print A3R
     print A4R
     #print A5R
+    print A6R
+    print A7R
     print sum(A0R)/len(A0R)
     print sum(A1R)/len(A1R)
     print sum(A2R)/len(A2R)
     #print sum(A3R)/len(A3R)
     print sum(A4R)/len(A4R)
     #print sum(A5R)/len(A5R)
-    
+    print sum(A6R)/len(A6R)
+    print sum(A7R)/len(A7R)
     return A1Dict, A4Dict, uncertainG
 #==============================================================================
 #     # 验算计算过程
@@ -419,7 +444,7 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
             DMax = set(D)
             RMax = R
             NotMaxCount = 0
-        elif NotMaxCount < 6 and len(saveList) > 0: #见line421
+        elif NotMaxCount < 1 and len(saveList) > 0: #见line421
             R = RPrime # 只是简单的复制粘贴，可能还有部分是多余的
             node = saveList[0].popNode #要是有个点是孤立的，这里会挂（saveList是空的）
             D.add(node)
