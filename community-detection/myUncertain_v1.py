@@ -73,7 +73,7 @@ def iterativeExpansion(G,startNode):
         commnutyList = temp
     return commnutyList
 
-def localCommunityIdentification(G,startNode):
+def localCommunityIdentification(G,startNode,threshold=True):
     def helperA(node, nodeSet):
         count = 0
         for item in nodeSet:
@@ -142,7 +142,7 @@ def localCommunityIdentification(G,startNode):
             tempKPrime = float(NodeIn+NodeShell)/float(helperB(node))
             #tempKPrime = float(NodeIn+NodeShell)/float(tempSTotal)
             
-            if tempKPrime >= (1-np.exp(-len(D)/2.))*0.5:#min(len(D),3)*0.166: #0.5 or (len(D) <= 3 and tempRPrime >= R): # 加上结果会干净很多
+            if threshold is False or tempKPrime >= (1-np.exp(-len(D)/2.))*0.5:#min(len(D),3)*0.166: #0.5 or (len(D) <= 3 and tempRPrime >= R): # 加上结果会干净很多
                 save = Save(tempRPrime, tempKPrime, node, tempB, tempBIn, tempBTotal, removeSet)
                 saveList.append(save)            
 
@@ -286,57 +286,87 @@ def addProb(G,prob=0.9,percent=0.15):
 #         print G.node[item]
 #     print '*******************'
 #==============================================================================
-G = nx.read_gml("football_edit.gml")
-G = addProb(G,prob=0.8,percent=0.35)
-#for a,b in G.edges():
-#    G.edge[a][b]['prob'] = 1
-#start = 'Kent'
-dic = {}
-for node in G.nodes():
-    label = G.node[node]['value']
-    if label not in dic:
-        dic[label] = set([node])
-    else:
-        dic[label].add(node)
-number = 0
-TP1 = 0
-TPFN1 = 0
-TPFP1 = 0
-TP2 = 0
-TPFN2 = 0
-TPFP2 = 0
-for start in G.nodes():
-    print number
-    number += 1
-    
-    result,_ = localCommunityIdentification(G,start)
-    label = G.node[start]['value']
-    print "label: " + str(label)
-    print "node in this label: " + str(len(dic[label]))
-    print "node actually in this label: " + str(len(result))
-    TPFN1 += len(dic[label])
-    TPFP1 += len(result)
-    for item in result:
-        print G.node[item]
-        if G.node[item]['value'] == label:
-            TP1 += 1
-    print "----------------------"
-    
-    result,_ = uA1.localCommunityIdentification(G,start)
-    label = G.node[start]['value']
-    print "label: " + str(label)
-    print "node in this label: " + str(len(dic[label]))
-    print "node actually in this label: " + str(len(result))
-    TPFN2 += len(dic[label])
-    TPFP2 += len(result)
-    for item in result:
-        print G.node[item]
-        if G.node[item]['value'] == label:
-            TP2 += 1
-    print "**********************"
-print "Evaluation: 正确被检索的/应该检索到的  正确被检索的/实际被检索到的"
-print "algorithm1: "+str(float(TP1)/float(TPFN1))+'    '+str(float(TP1)/float(TPFP1))
-print "algorithm2: "+str(float(TP2)/float(TPFN2))+'    '+str(float(TP2)/float(TPFP2))
+#==============================================================================
+# G = nx.read_gml("football_edit.gml")
+# G = addProb(G,prob=0.8,percent=0.35)
+# #for a,b in G.edges():
+# #    G.edge[a][b]['prob'] = 1
+# #start = 'Kent'
+# dic = {}
+# for node in G.nodes():
+#     label = G.node[node]['value']
+#     if label not in dic:
+#         dic[label] = set([node])
+#     else:
+#         dic[label].add(node)
+# number = 0
+# TP1 = 0
+# TPFN1 = 0
+# TPFP1 = 0
+# TP2 = 0
+# TPFN2 = 0
+# TPFP2 = 0
+# TP3 = 0
+# TPFN3 = 0
+# TPFP3 = 0
+# for start in G.nodes():
+#     print number
+#     number += 1
+#     
+#     result,_ = localCommunityIdentification(G,start)
+#     label = G.node[start]['value']
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN1 += len(dic[label])
+#     TPFP1 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item]['value'] == label:
+#             TP1 += 1
+#     print "----------------------"
+#     
+#     result,_ = localCommunityIdentification(G,start,False)
+#     label = G.node[start]['value']
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN3 += len(dic[label])
+#     TPFP3 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item]['value'] == label:
+#             TP3 += 1
+#     print "----------------------"
+#     
+#     result,_ = uA1.localCommunityIdentification(G,start)
+#     label = G.node[start]['value']
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN2 += len(dic[label])
+#     TPFP2 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item]['value'] == label:
+#             TP2 += 1
+#     print "**********************"
+# print "Evaluation: 正确被检索的/应该检索到的  正确被检索的/实际被检索到的"
+# R1 = float(TP1)/float(TPFN1)
+# P1 = float(TP1)/float(TPFP1)
+# print "algorithm1: "+str(R1)+'    '+str(P1)
+# print "F1 = " + str(2*R1*P1/(R1+P1))
+# 
+# R3 = float(TP3)/float(TPFN3)
+# P3 = float(TP3)/float(TPFP3)
+# print "algorithm3: "+str(R3)+'    '+str(P3)
+# print "F1 = " + str(2*R3*P3/(R3+P3))
+# 
+# R2 = float(TP2)/float(TPFN2)
+# P2 = float(TP2)/float(TPFP2)
+# print "algorithm2: "+str(R2)+'    '+str(P2)
+# print "F1 = " + str(2*R2*P2/(R2+P2))
+#==============================================================================
     
             
 #==============================================================================
