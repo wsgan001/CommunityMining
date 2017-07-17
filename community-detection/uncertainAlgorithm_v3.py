@@ -61,7 +61,7 @@ def main2():
     #start = 'Kent'
     # data 2
     uncertainG = nx.karate_club_graph()
-    uncertainG = addProb(uncertainG,prob=0.8,percent=0.35)
+    uncertainG = addProb(uncertainG,prob=0.8,percent=0.15)
     start = 1
     # data 1
     #uncertainG = generateUncertainGraph()
@@ -110,10 +110,11 @@ def main():
 #==============================================================================
     #start = 'SSP2'
     # data 3
-    G = nx.read_gml("football_edit.gml")
-    #G = nx.read_gml("dolphin_edit.gml")
+    #G = nx.read_gml("football_edit.gml")
+    G = nx.read_gml("dolphin_edit.gml")
+    #G = nx.karate_club_graph()
     #uncertainG = addProb(G,prob=0.75,percent=0.25)
-    uncertainG = addProb(G,prob=0.9,percent=0.15)
+    uncertainG = addProb(G,prob=0.8,percent=0.25)
     #start = G.nodes()[random.randint(0,len(G.nodes()))]
     #start = 'Kent'a
     # data 2
@@ -128,6 +129,10 @@ def main():
     A5R = []
     A6R = []
     A7R = []
+    A8R = []
+    A9R = []
+    A10R = []
+    A11R = []
     A1Dict = {}
     GList = evaluate.sampleGraph(uncertainG,100)
     print "finish sampling"
@@ -138,25 +143,27 @@ def main():
         # data 1
         #uncertainG = generateUncertainGraph()
         #start = 13
-        D, S, R, _, SGR, SGList = localCommunityIdentification(uncertainG,start,100)
-        A1Dict[start] = D
-        #print D, S, R
-        print D
-        print R
-        A0R.append(R)
-        #print SGR
-        if R == 0:
-            #return D, S, R, _, SGR, SGList, uncertainG, GList
-            return GList, "", uncertainG
-        
-        RList = []
-        for item in GList:
-            RList.append(calculateR(item,D))
-        print sum(RList)/100.
-        A1R.append(sum(RList)/100.)
-        
-        if sum(RList)/100. == 0:
-            return D, S, R, _, SGR, SGList, uncertainG, GList
+#==============================================================================
+#         D, S, R, _, SGR, SGList = localCommunityIdentification(uncertainG,start,100)
+#         A1Dict[start] = D
+#         #print D, S, R
+#         print D
+#         print R
+#         A0R.append(R)
+#         #print SGR
+#         if R == 0:
+#             #return D, S, R, _, SGR, SGList, uncertainG, GList
+#             return GList, "", uncertainG
+#         
+#         RList = []
+#         for item in GList:
+#             RList.append(calculateR(item,D))
+#         print sum(RList)/100.
+#         A1R.append(sum(RList)/100.)
+#         
+#         if sum(RList)/100. == 0:
+#             return D, S, R, _, SGR, SGList, uncertainG, GList
+#==============================================================================
         
         #print RList
         D2, _ = uav1.localCommunityIdentification(uncertainG,start)
@@ -168,7 +175,7 @@ def main():
         print sum(RList2)/100.
         A2R.append(sum(RList2)/100.)
         
-        D6, _ = mU1.localCommunityIdentification(uncertainG,start)
+        D6, _ = mU1.localCommunityIdentification(uncertainG,start,0)
         print D6
         RList6 = []
         for item in GList:
@@ -176,13 +183,45 @@ def main():
         print sum(RList6)/100.
         A6R.append(sum(RList6)/100.)
         
-        D7, _ = mU1.localCommunityIdentification(uncertainG,start,False)
+        D7, _ = mU1.localCommunityIdentification(uncertainG,start,0,False)
         print D7
         RList7 = []
         for item in GList:
             RList7.append(calculateR(item,D7))
         print sum(RList7)/100.
         A7R.append(sum(RList7)/100.)
+        
+        D8, _ = mU1.localCommunityIdentification(uncertainG,start,1)
+        print D8
+        RList8 = []
+        for item in GList:
+            RList8.append(calculateR(item,D8))
+        print sum(RList8)/100.
+        A8R.append(sum(RList8)/100.)
+        
+        D9, _ = mU1.localCommunityIdentification(uncertainG,start,1,False)
+        print D9
+        RList9 = []
+        for item in GList:
+            RList9.append(calculateR(item,D9))
+        print sum(RList9)/100.
+        A9R.append(sum(RList9)/100.)
+        
+        D10, _ = mU1.localCommunityIdentification(uncertainG,start,2) #karate上非常不稳定，有时很好有时很不好
+        print D10
+        RList10 = []
+        for item in GList:
+            RList10.append(calculateR(item,D10))
+        print sum(RList10)/100.
+        A10R.append(sum(RList10)/100.)
+        
+        D11, _ = mU1.localCommunityIdentification(uncertainG,start,2,False)
+        print D11
+        RList11 = []
+        for item in GList:
+            RList11.append(calculateR(item,D11))
+        print sum(RList11)/100.
+        A11R.append(sum(RList11)/100.)
     
 #==============================================================================
 #         # MCL algorithm
@@ -235,22 +274,30 @@ def main():
 #         A5R.append(sum(RList5)/100.)
 #==============================================================================
         
-    print A0R
-    print A1R
+    #print A0R
+    #print A1R
     print A2R
     #print A3R
     print A4R
     #print A5R
     print A6R
     print A7R
-    print sum(A0R)/len(A0R)
-    print sum(A1R)/len(A1R)
+    print A8R
+    print A9R
+    print A10R
+    print A11R
+    #print sum(A0R)/len(A0R)
+    #print sum(A1R)/len(A1R)
     print sum(A2R)/len(A2R)
     #print sum(A3R)/len(A3R)
     print sum(A4R)/len(A4R)
     #print sum(A5R)/len(A5R)
     print sum(A6R)/len(A6R)
     print sum(A7R)/len(A7R)
+    print sum(A8R)/len(A8R)
+    print sum(A9R)/len(A9R)
+    print sum(A10R)/len(A10R)
+    print sum(A11R)/len(A11R)
     return A1Dict, A4Dict, uncertainG
 #==============================================================================
 #     # 验算计算过程
