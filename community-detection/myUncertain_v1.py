@@ -73,7 +73,7 @@ def iterativeExpansion(G,startNode):
         commnutyList = temp
     return commnutyList
 
-def localCommunityIdentification(G,startNode,threshold=True):
+def localCommunityIdentification(G,startNode,model,threshold=True):
     def helperA(node, nodeSet):
         count = 0
         for item in nodeSet:
@@ -149,20 +149,38 @@ def localCommunityIdentification(G,startNode,threshold=True):
             tempRPrime = float(tempBIn)/float(tempBTotal)
             
             #tempSTotal = len(set(G[node].keys()).difference(D).union(S)) 
-            
-            #NodeIn = helperA(node,D)#len(set(G[node].keys()).intersection(D))
-            #NodeShell = helperC(node,S)#helperA(node,S)#len(set(G[node].keys()).intersection(S))
-            #tempKPrime = float(NodeIn+NodeShell)#/float(helperB(node))#tempKPrime = float(NodeIn+NodeShell)/float(tempSTotal)
-            NodeIn = helperD(node,D)#len(set(G[node].keys()).intersection(D))
-            NodeShell = helperE(node,S)#helperA(node,S)#len(set(G[node].keys()).intersection(S))
-            tempKPrime = 1 - NodeIn * NodeShell#tempKPrime = float(NodeIn+NodeShell)/float(tempSTotal)
+            if model == 0:
+                NodeIn = helperA(node,D)#len(set(G[node].keys()).intersection(D))
+                NodeShell = helperC(node,S)#helperA(node,S)#len(set(G[node].keys()).intersection(S))
+                tempKPrime = float(NodeIn+NodeShell)#/float(helperB(node))#tempKPrime = float(NodeIn+NodeShell)/float(tempSTotal)
+                save = Save(tempRPrime, tempKPrime, node, tempB, tempBIn, tempBTotal, removeSet)
+                saveList.append(save)   
+            elif model == 1:
+                NodeIn = helperD(node,D)#len(set(G[node].keys()).intersection(D))
+                NodeShell = helperE(node,S)#helperA(node,S)#len(set(G[node].keys()).intersection(S))
+                tempKPrime = 1 - NodeIn * NodeShell#tempKPrime = float(NodeIn+NodeShell)/float(tempSTotal)
+                save = Save(tempRPrime, tempKPrime, node, tempB, tempBIn, tempBTotal, removeSet)
+                saveList.append(save)   
+            elif model == 2:
+                NodeIn = helperA(node,D)#len(set(G[node].keys()).intersection(D))
+                NodeShell = helperC(node,S)#helperA(node,S)#len(set(G[node].keys()).intersection(S))
+                tempKPrime = float(NodeIn+NodeShell)/float(helperB(node))
+                if tempKPrime >= 0:#(1-np.exp(-len(D)*1.0/6.))*0.5:
+                    save = Save(tempRPrime, tempKPrime, node, tempB, tempBIn, tempBTotal, removeSet)
+                    saveList.append(save)   
+            else:
+                NodeIn = helperA(node,D)#len(set(G[node].keys()).intersection(D))
+                NodeShell = helperC(node,S)#helperA(node,S)#len(set(G[node].keys()).intersection(S))
+                tempKPrime = 2*float(NodeIn+NodeShell)-float(helperB(node))#tempKPrime = float(NodeIn+NodeShell)/float(tempSTotal)
+                save = Save(tempRPrime, tempKPrime, node, tempB, tempBIn, tempBTotal, removeSet)
+                saveList.append(save) 
             #if threshold is False or len(D) < 20 or (len(D) >= 20 and tempKPrime >= 0.5):
             #degree = 5.05
             #para = 1./(-np.log(1-2./degree))
             #if threshold is False or tempKPrime >= (1-np.exp(-len(D)*1.0/para))*0.5:#min(len(D),3)*0.166: #0.5 or (len(D) <= 3 and tempRPrime >= R): # 加上结果会干净很多
             #if threshold is False or tempKPrime >= min((len(D)+1)*0.5,0.5*12)/12.:
-            save = Save(tempRPrime, tempKPrime, node, tempB, tempBIn, tempBTotal, removeSet)
-            saveList.append(save)            
+            #save = Save(tempRPrime, tempKPrime, node, tempB, tempBIn, tempBTotal, removeSet)
+            #saveList.append(save)            
 
         saveList.sort(key=lambda save:save.RPrime,reverse=True)
         saveList.sort(key=lambda save:save.KPrime,reverse=True)
@@ -200,7 +218,19 @@ def localCommunityIdentification(G,startNode,threshold=True):
 
         if checkLabel == False:
             label = False
-    return D, S
+            
+    result = set()
+    result.add(startNode)
+    for item in D:
+        if item != startNode:
+            inValue = helperA(item,D)
+            outValue = helperB(item) - inValue
+            if inValue >= outValue:
+                result.add(item)
+    if threshold:
+        return result, S
+    else:
+        return D, S
     
 def addProb(G,prob=0.9,percent=0.15):
     for a,b in G.edges():
@@ -226,6 +256,35 @@ def addProb(G,prob=0.9,percent=0.15):
         count += 1
     return G
     
+G = nx.Graph()
+G.add_edge(1,2,prob=0.9)
+G.add_edge(1,3,prob=0.9)
+G.add_edge(1,4,prob=0.9)
+G.add_edge(1,5,prob=0.9)
+G.add_edge(1,6,prob=0.9)
+G.add_edge(2,3,prob=0.9)
+G.add_edge(2,4,prob=0.9)
+G.add_edge(2,5,prob=0.9)
+G.add_edge(2,6,prob=0.9)
+G.add_edge(3,4,prob=0.9)
+G.add_edge(3,5,prob=0.9)
+G.add_edge(3,6,prob=0.9)
+G.add_edge(4,5,prob=0.9)
+G.add_edge(4,6,prob=0.9)
+G.add_edge(5,6,prob=0.9)
+
+G.add_edge(6,7,prob=0.8)
+
+G.add_edge(7,8,prob=0.8)
+G.add_edge(7,9,prob=0.8)
+G.add_edge(7,10,prob=0.8)
+G.add_edge(8,9,prob=0.8)
+G.add_edge(8,10,prob=0.8)
+G.add_edge(9,10,prob=0.8)
+G.add_edge(9,11,prob=0.8)
+start = 6
+result = localCommunityIdentification(G,start,0)
+print result
 #==============================================================================
 # G = nx.read_gml("network.gml")
 # start = 0
@@ -304,105 +363,234 @@ def addProb(G,prob=0.9,percent=0.15):
 #         print G.node[item]
 #     print '*******************'
 #==============================================================================
-G = nx.Graph()
-File = open("binary_networks/network.dat","r")
-for line in File:
-    nodeA, nodeB = line.strip().split("\t")
-    G.add_edge(int(nodeA),int(nodeB))
-dic = {}
-label = {}
-File = open("binary_networks/community.dat","r")
-for line in File:
-    node, community = line.strip().split("\t")
-    G.node[int(node)]['value'] = int(community)
-    label[int(node)] = int(community)
-    if int(community) not in dic:
-        dic[int(community)] = set([int(node)])
-    else:
-        dic[int(community)].add(int(node))
-#G = nx.read_gml("football_edit.gml")
-#G = nx.karate_club_graph()
-G = addProb(G,prob=0.8,percent=0.35)
-#G = addProb(G,prob=0.8,percent=0.2)
-#for a,b in G.edges():
-#    G.edge[a][b]['prob'] = 1
-#start = 'Kent'
-dic = {}
-labelName = 'value'#'club'#'value'
-for node in G.nodes():
-    label = G.node[node][labelName]
-    if label not in dic:
-        dic[label] = set([node])
-    else:
-        dic[label].add(node)
-number = 0
-TP1 = 0
-TPFN1 = 0
-TPFP1 = 0
-TP2 = 0
-TPFN2 = 0
-TPFP2 = 0
-TP3 = 0
-TPFN3 = 0
-TPFP3 = 0
-for start in G.nodes():
-    print number
-    number += 1
-    
-    result,_ = localCommunityIdentification(G,start)
-    label = G.node[start][labelName]
-    print "label: " + str(label)
-    print "node in this label: " + str(len(dic[label]))
-    print "node actually in this label: " + str(len(result))
-    TPFN1 += len(dic[label])
-    TPFP1 += len(result)
-    for item in result:
-        print G.node[item]
-        if G.node[item][labelName] == label:
-            TP1 += 1
-    print "----------------------"
-    
-    result,_ = localCommunityIdentification(G,start,False)
-    label = G.node[start][labelName]
-    print "label: " + str(label)
-    print "node in this label: " + str(len(dic[label]))
-    print "node actually in this label: " + str(len(result))
-    TPFN3 += len(dic[label])
-    TPFP3 += len(result)
-    for item in result:
-        print G.node[item]
-        if G.node[item][labelName] == label:
-            TP3 += 1
-    print "----------------------"
-    
-    result,_ = uA1.localCommunityIdentification(G,start)
-    label = G.node[start][labelName]
-    print "label: " + str(label)
-    print "node in this label: " + str(len(dic[label]))
-    print "node actually in this label: " + str(len(result))
-    TPFN2 += len(dic[label])
-    TPFP2 += len(result)
-    for item in result:
-        print G.node[item]
-        if G.node[item][labelName] == label:
-            TP2 += 1
-    print "**********************"
-print "Evaluation: 正确被检索的/应该检索到的  正确被检索的/实际被检索到的"
-R1 = float(TP1)/float(TPFN1)
-P1 = float(TP1)/float(TPFP1)
-print "algorithm1: "+str(R1)+'    '+str(P1)
-print "F1 = " + str(2*R1*P1/(R1+P1))
-
-R3 = float(TP3)/float(TPFN3)
-P3 = float(TP3)/float(TPFP3)
-print "algorithm3: "+str(R3)+'    '+str(P3)
-print "F1 = " + str(2*R3*P3/(R3+P3))
-
-R2 = float(TP2)/float(TPFN2)
-P2 = float(TP2)/float(TPFP2)
-print "algorithm2: "+str(R2)+'    '+str(P2)
-print "F1 = " + str(2*R2*P2/(R2+P2))
-    
+#==============================================================================
+# G = nx.Graph()
+# File = open("binary_networks/network.dat","r")
+# for line in File:
+#     nodeA, nodeB = line.strip().split("\t")
+#     G.add_edge(int(nodeA),int(nodeB))
+# dic = {}
+# label = {}
+# File = open("binary_networks/community.dat","r")
+# for line in File:
+#     node, community = line.strip().split("\t")
+#     G.node[int(node)]['value'] = int(community)
+#     label[int(node)] = int(community)
+#     if int(community) not in dic:
+#         dic[int(community)] = set([int(node)])
+#     else:
+#         dic[int(community)].add(int(node))
+#==============================================================================
+#==============================================================================
+# #G = nx.read_gml("football_edit.gml")
+# G = nx.karate_club_graph()
+# G = addProb(G,prob=0.8,percent=0.35)
+# #G = addProb(G,prob=0.8,percent=0.2)
+# #for a,b in G.edges():
+# #    G.edge[a][b]['prob'] = 1
+# #start = 'Kent'
+# dic = {}
+# labelName = 'club'#'value'#'club'#'value'
+# for node in G.nodes():
+#     label = G.node[node][labelName]
+#     if label not in dic:
+#         dic[label] = set([node])
+#     else:
+#         dic[label].add(node)
+# number = 0
+# TP1 = 0
+# TPFN1 = 0
+# TPFP1 = 0
+# TP2 = 0
+# TPFN2 = 0
+# TPFP2 = 0
+# TP3 = 0
+# TPFN3 = 0
+# TPFP3 = 0
+# TP4 = 0
+# TPFN4 = 0
+# TPFP4 = 0
+# TP5 = 0
+# TPFN5 = 0
+# TPFP5 = 0
+# TP6 = 0
+# TPFN6 = 0
+# TPFP6 = 0
+# TP7 = 0
+# TPFN7 = 0
+# TPFP7 = 0
+# TP8 = 0
+# TPFN8 = 0
+# TPFP8 = 0
+# TP9 = 0
+# TPFN9 = 0
+# TPFP9 = 0
+# for start in G.nodes():
+#     print number
+#     number += 1
+#     
+#     result,_ = localCommunityIdentification(G,start,0)
+#     label = G.node[start][labelName]
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN1 += len(dic[label])
+#     TPFP1 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item][labelName] == label:
+#             TP1 += 1
+#     print "----------------------"
+#     
+#     result,_ = localCommunityIdentification(G,start,0,False)
+#     label = G.node[start][labelName]
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN2 += len(dic[label])
+#     TPFP2 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item][labelName] == label:
+#             TP2 += 1
+#     print "----------------------"
+#     
+#     result,_ = uA1.localCommunityIdentification(G,start)
+#     label = G.node[start][labelName]
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN3 += len(dic[label])
+#     TPFP3 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item][labelName] == label:
+#             TP3 += 1
+#     print "----------------------"
+#             
+#     result,_ = localCommunityIdentification(G,start,1)
+#     label = G.node[start][labelName]
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN4 += len(dic[label])
+#     TPFP4 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item][labelName] == label:
+#             TP4 += 1
+#     print "----------------------"
+#     
+#     result,_ = localCommunityIdentification(G,start,1,False)
+#     label = G.node[start][labelName]
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN5 += len(dic[label])
+#     TPFP5 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item][labelName] == label:
+#             TP5 += 1
+#     print "----------------------"
+#             
+#     result,_ = localCommunityIdentification(G,start,2)
+#     label = G.node[start][labelName]
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN6 += len(dic[label])
+#     TPFP6 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item][labelName] == label:
+#             TP6 += 1
+#     print "----------------------"
+#     
+#     result,_ = localCommunityIdentification(G,start,2,False)
+#     label = G.node[start][labelName]
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN7 += len(dic[label])
+#     TPFP7 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item][labelName] == label:
+#             TP7 += 1
+#     print "----------------------"
+#             
+#     result,_ = localCommunityIdentification(G,start,3)
+#     label = G.node[start][labelName]
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN8 += len(dic[label])
+#     TPFP8 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item][labelName] == label:
+#             TP8 += 1
+#     print "----------------------"
+#     
+#     result,_ = localCommunityIdentification(G,start,3,False)
+#     label = G.node[start][labelName]
+#     print "label: " + str(label)
+#     print "node in this label: " + str(len(dic[label]))
+#     print "node actually in this label: " + str(len(result))
+#     TPFN9 += len(dic[label])
+#     TPFP9 += len(result)
+#     for item in result:
+#         print G.node[item]
+#         if G.node[item][labelName] == label:
+#             TP9 += 1
+#     print "**********************"
+# print "Evaluation: 正确被检索的/应该检索到的  正确被检索的/实际被检索到的"
+# R1 = float(TP1)/float(TPFN1)
+# P1 = float(TP1)/float(TPFP1)
+# print "algorithm1: "+str(R1)+'    '+str(P1)
+# print "F1 = " + str(2*R1*P1/(R1+P1))
+# 
+# R2 = float(TP2)/float(TPFN2)
+# P2 = float(TP2)/float(TPFP2)
+# print "algorithm2: "+str(R2)+'    '+str(P2)
+# print "F1 = " + str(2*R2*P2/(R2+P2))
+#     
+# R3 = float(TP3)/float(TPFN3)
+# P3 = float(TP3)/float(TPFP3)
+# print "algorithm3: "+str(R3)+'    '+str(P3)
+# print "F1 = " + str(2*R3*P3/(R3+P3))
+# 
+# R4 = float(TP4)/float(TPFN4)
+# P4 = float(TP4)/float(TPFP4)
+# print "algorithm4: "+str(R4)+'    '+str(P4)
+# print "F1 = " + str(2*R4*P4/(R4+P4))
+# 
+# R5 = float(TP5)/float(TPFN5)
+# P5 = float(TP5)/float(TPFP5)
+# print "algorithm5: "+str(R5)+'    '+str(P5)
+# print "F1 = " + str(2*R5*P5/(R5+P5))
+# 
+# R6 = float(TP6)/float(TPFN6)
+# P6 = float(TP6)/float(TPFP6)
+# print "algorithm6: "+str(R6)+'    '+str(P6)
+# print "F1 = " + str(2*R6*P6/(R6+P6))
+# 
+# R7 = float(TP7)/float(TPFN7)
+# P7 = float(TP7)/float(TPFP7)
+# print "algorithm7: "+str(R7)+'    '+str(P7)
+# print "F1 = " + str(2*R7*P7/(R7+P7))
+# 
+# R8 = float(TP8)/float(TPFN8)
+# P8 = float(TP8)/float(TPFP8)
+# print "algorithm8: "+str(R8)+'    '+str(P8)
+# print "F1 = " + str(2*R8*P8/(R8+P8))
+# 
+# R9 = float(TP9)/float(TPFN9)
+# P9 = float(TP9)/float(TPFP9)
+# print "algorithm9: "+str(R9)+'    '+str(P9)
+# print "F1 = " + str(2*R9*P9/(R9+P9))
+#==============================================================================
             
 #==============================================================================
 # G = nx.Graph()
