@@ -63,8 +63,12 @@ def localCommunityIdentification(G,startNode):
     BIn = 0
     BTotal = len(G[startNode])
     while label:
-        print R
-        print D
+#==============================================================================
+#         print R
+#         print BIn
+#         print BTotal
+#         print D
+#==============================================================================
         RPrime = -float('inf')
         ShellNodeCount = -float('inf')
         for node in S:
@@ -88,45 +92,52 @@ def localCommunityIdentification(G,startNode):
             for item in removeSet:
                 count += len(set(G[item].keys()).intersection(removeSet))
                 previousCount += len(set(G[item].keys()).intersection(previousRemove))
-            deltaPrime = count // 2 + previousCount
+            deltaPrime = count / 2 + previousCount
             tempBIn = BIn + deltaIn - deltaPrime
             tempBTotal = BTotal + deltaTotal - deltaPrime
-            tempRPrime = float(tempBIn)/float(tempBTotal)
-            tempShellNodeCount = len(set(G[node].keys()).intersection(S))
-            if len(D) == 1:
-                if tempShellNodeCount > ShellNodeCount or (tempShellNodeCount == ShellNodeCount and tempRPrime > RPrime):
-                    RPrime = tempRPrime
-                    ShellNodeCount = tempShellNodeCount
-                    popNodeList = [node]
-                    saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
-                    saveBInList = [tempBIn]
-                    saveBTotalList = [tempBTotal]
-                    saveRemoveSetList = [removeSet]
-                elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
-                    popNodeList.append(node)
-                    saveBList.append(tempB)
-                    saveBInList.append(tempBIn)
-                    saveBTotalList.append(tempBTotal)
-                    saveRemoveSetList.append(removeSet)
+            if abs(tempBTotal) <= 0.000001:
+                tempRPrime = 1
             else:
-                if tempRPrime > RPrime or (tempRPrime == RPrime and tempShellNodeCount > ShellNodeCount):
-                    RPrime = tempRPrime
-                    ShellNodeCount = tempShellNodeCount
-                    popNodeList = [node]
-                    saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
-                    saveBInList = [tempBIn]
-                    saveBTotalList = [tempBTotal]
-                    saveRemoveSetList = [removeSet]
-                elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
-                    popNodeList.append(node)
-                    saveBList.append(tempB)
-                    saveBInList.append(tempBIn)
-                    saveBTotalList.append(tempBTotal)
-                    saveRemoveSetList.append(removeSet)
+                tempRPrime = float(tempBIn)/float(tempBTotal)
+            tempShellNodeCount = len(set(G[node].keys()).intersection(S))
+#==============================================================================
+#             if len(D) == 1:
+#                 if tempShellNodeCount > ShellNodeCount or (tempShellNodeCount == ShellNodeCount and tempRPrime > RPrime):
+#                     RPrime = tempRPrime
+#                     ShellNodeCount = tempShellNodeCount
+#                     popNodeList = [node]
+#                     saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
+#                     saveBInList = [tempBIn]
+#                     saveBTotalList = [tempBTotal]
+#                     saveRemoveSetList = [removeSet]
+#                 elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
+#                     popNodeList.append(node)
+#                     saveBList.append(tempB)
+#                     saveBInList.append(tempBIn)
+#                     saveBTotalList.append(tempBTotal)
+#                     saveRemoveSetList.append(removeSet)
+#             else:
+#==============================================================================
+            if tempRPrime > RPrime:# or (tempRPrime == RPrime and tempShellNodeCount > ShellNodeCount):
+                RPrime = tempRPrime
+                ShellNodeCount = tempShellNodeCount
+                popNodeList = [node]
+                saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
+                saveBInList = [tempBIn]
+                saveBTotalList = [tempBTotal]
+                saveRemoveSetList = [removeSet]
+            elif tempRPrime == RPrime:# and tempShellNodeCount == ShellNodeCount:
+                popNodeList.append(node)
+                saveBList.append(tempB)
+                saveBInList.append(tempBIn)
+                saveBTotalList.append(tempBTotal)
+                saveRemoveSetList.append(removeSet)
         if RPrime > R:# or (RPrime > 0.98 * R and ShellNodeCount >= 2):
-            print popNodeList
-            print RPrime
-            print ShellNodeCount
+#==============================================================================
+#             print popNodeList
+#             print RPrime
+#             print ShellNodeCount
+#==============================================================================
             index = random.randint(0,len(popNodeList)-1)
             popNode = popNodeList[index]
             saveB = saveBList[index]
@@ -149,7 +160,25 @@ def localCommunityIdentification(G,startNode):
             BTotal = saveBTotal
         else:
             label = False
-    return D, S
+    return D, R#S
+    
+#==============================================================================
+# G = nx.read_gml("network.gml")
+# start = 0
+# result = localCommunityIdentification(G,start)
+# print result
+# print len(result[0])
+# dic = {}
+# for item in G.nodes():
+#     label = int(G.node[item]['c'][2])
+#     if label not in dic:
+#         dic[label] = set([item])
+#     else:
+#         dic[label].add(item)
+# print len(dic[int(G.node[start]['c'][2])])
+# intersection = result[0].intersection(dic[int(G.node[start]['c'][2])])
+# print len(intersection)
+#==============================================================================
     
 #==============================================================================
 # G = nx.Graph()
@@ -181,7 +210,8 @@ def localCommunityIdentification(G,startNode):
 # G.add_edge(10,12)
 # G.add_edge(11,12)
 # G.add_edge(11,13)
-# start = 10
+# start = 12
+# print localCommunityIdentification(G,start)[0]
 #==============================================================================
 #==============================================================================
 # G = generateGraph()
@@ -189,11 +219,13 @@ def localCommunityIdentification(G,startNode):
 # result = iterativeExpansion(G,start)
 # print result
 #==============================================================================
-G = nx.karate_club_graph() # 2被分错了，start=1时[24, 25, 28, 31]被单独了出来，但是总体很不错，有时候也会独立[16, 10, 4, 5, 6]
-#当start=7时 [16, 10, 4, 5, 6]被独立
-start = 1
-result = iterativeExpansion(G,start)
-print result
+# #==============================================================================
+# G = nx.karate_club_graph() # 2被分错了，start=1时[24, 25, 28, 31]被单独了出来，但是总体很不错，有时候也会独立[16, 10, 4, 5, 6]
+# #当start=7时 [16, 10, 4, 5, 6]被独立
+# start = 1
+# result = iterativeExpansion(G,start)
+# print result
+#==============================================================================
 #G = nx.florentine_families_graph()
 #start = 'Strozzi'
 #==============================================================================
@@ -207,7 +239,15 @@ print result
 #         print G.node[item]
 #     print '*******************'
 #==============================================================================
-
+#==============================================================================
+# G = nx.read_gml("football_edit.gml")
+# #start = 'Kent'
+# for start in G.nodes():
+#     result,_ = localCommunityIdentification(G,start)
+#     for item in result:
+#         print G.node[item]
+#     print "**********************"
+#==============================================================================
             
 #==============================================================================
 # G = nx.Graph()
