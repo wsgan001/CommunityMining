@@ -17,6 +17,7 @@ import uncertainAlgorithm_v1 as uav1
 import os, sys
 import cmty
 import myUncertain_v1 as mU1
+import paperReimplement as pR
 
 sys.path.append(os.getcwd()+'/python_mcl-master/mcl/')
 from mcl_clustering import mcl
@@ -46,6 +47,186 @@ class SampleGraph(object):
         self.BIn = BIn
         self.BTotal = BTotal
 
+def evaluation():
+    percentList = [0,0.1,0.2,0.35,0.5]
+    for percentNumber in percentList:
+        print "percent = " + str(percentNumber)
+        A0RList = []
+        A1RList = []
+        A2RList = []
+        A3RList = []
+        A4RList = []
+        A5RList = []
+        A10RList = []
+        A11RList = []
+        testLength = 100
+        for testNumber in xrange(testLength):
+#==============================================================================
+#         uncertainG = nx.Graph()
+#         File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
+#         for line in File:
+#             edgeList = line.strip().split('\t')
+#             uncertainG.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+#==============================================================================
+            #start = 'SSP2'
+            # data 3
+            #G = nx.read_gml("football_edit.gml")
+            #G = nx.read_gml("dolphin_edit.gml")
+            G = nx.karate_club_graph()
+            if percentNumber == 0:
+                uncertainG = addProbOrigin(G)
+            else:
+                uncertainG = addProb(G,prob=0.8,percent=percentNumber)
+            #start = G.nodes()[random.randint(0,len(G.nodes()))]
+            #start = 'Kent'a
+            # data 2
+            #uncertainG = nx.karate_club_graph()
+            #uncertainG = nx.random_partition_graph([10]*8,0.4,0.02)
+            #uncertainG = addProb(uncertainG,prob=0.9,percent=0.15)
+            A0R = []
+            A1R = []
+            A2R = []
+            A3R = []
+            A4R = []
+            A5R = []
+            A10R = []
+            A11R = []
+        
+            GList = evaluate.sampleGraph(uncertainG,100)
+            #print "finish sampling"
+            testList = list(uncertainG.nodes())
+            random.shuffle(testList)
+            testList = testList[:300]
+            for start in testList:#uncertainG.nodes():
+                
+                D0, _ = pR.localCommunityIdentification(G,start)
+                #print D0
+                RList0 = []
+                for item in GList:
+                    RList0.append(calculateR(item,D0))
+                #print sum(RList0)/100.
+                A0R.append(sum(RList0)/100.)
+                
+                D1, _ = uav1.localCommunityIdentification(uncertainG,start)
+                #print D1
+                RList1 = []
+                for item in GList:
+                    RList1.append(calculateR(item,D1))
+                #print sum(RList1)/100.
+                A1R.append(sum(RList1)/100.)
+                
+                D2, _ = mU1.localCommunityIdentification(uncertainG,start,0,False)
+                #print D2
+                RList2 = []
+                for item in GList:
+                    RList2.append(calculateR(item,D2))
+                #print sum(RList2)/100.
+                A2R.append(sum(RList2)/100.)
+                
+                D3, _ = mU1.localCommunityIdentification(uncertainG,start,0)
+                #print D3
+                RList3 = []
+                for item in GList:
+                    RList3.append(calculateR(item,D3))
+                #print sum(RList3)/100.
+                A3R.append(sum(RList3)/100.)
+                
+                
+                D10, _ = mU1.localCommunityIdentification(uncertainG,start,2) #karate上非常不稳定，有时很好有时很不好
+                #print D10
+                RList10 = []
+                for item in GList:
+                    RList10.append(calculateR(item,D10))
+                #print sum(RList10)/100.
+                A10R.append(sum(RList10)/100.)
+                
+                D11, _ = mU1.localCommunityIdentification(uncertainG,start,3)
+                #print D11
+                RList11 = []
+                for item in GList:
+                    RList11.append(calculateR(item,D11))
+                #print sum(RList11)/100.
+                A11R.append(sum(RList11)/100.)
+        
+                
+            # Louvain Community Detection weighted version
+            A4Result = community.best_partition(uncertainG,weight='weight')
+            #print "finish algorithm"
+            A4Dict = {}
+            for item in A4Result:
+                if A4Result[item] not in A4Dict:
+                    A4Dict[A4Result[item]] = set([item])
+                else:
+                    A4Dict[A4Result[item]].add(item)
+            #print "finish calculation"
+            for start in testList:#uncertainG.nodes():
+                RList4 = []
+                D4 = A4Dict[A4Result[start]]
+                for item in GList:
+                    RList4.append(calculateR(item,D4))
+                A4R.append(sum(RList4)/100.)
+                
+            # Louvain Community Detection
+            A5Result = community.best_partition(uncertainG,weight='prob')
+            #print "finish algorithm"
+            A5Dict = {}
+            for item in A5Result:
+                if A5Result[item] not in A5Dict:
+                    A5Dict[A5Result[item]] = set([item])
+                else:
+                    A5Dict[A5Result[item]].add(item)
+            #print "finish calculation"
+            for start in testList:#uncertainG.nodes():
+                RList5 = []
+                D5 = A5Dict[A5Result[start]]
+                for item in GList:
+                    RList5.append(calculateR(item,D5))
+                A5R.append(sum(RList5)/100.)
+            
+            A0RList.append(sum(A0R)/len(A0R))
+            A1RList.append(sum(A1R)/len(A1R))
+            A2RList.append(sum(A2R)/len(A2R))
+            A3RList.append(sum(A3R)/len(A3R))
+            A4RList.append(sum(A4R)/len(A4R))
+            A5RList.append(sum(A5R)/len(A5R))
+            A10RList.append(sum(A10R)/len(A10R))
+            A11RList.append(sum(A11R)/len(A11R))
+        
+        print "original R: " + str(sum(A0RList)*1.0/testLength)
+        print "uncertain R: " + str(sum(A1RList)*1.0/testLength)
+        print "uncertain R+K: " + str(sum(A2RList)*1.0/testLength)
+        print "uncertain R+K(Examination): " + str(sum(A3RList)*1.0/testLength)
+        print "original louvain: " + str(sum(A4RList)*1.0/testLength)
+        print "uncertain louvain: " + str(sum(A5RList)*1.0/testLength)
+        print "uncertain R+K/(Examination): " + str(sum(A10RList)*1.0/testLength)
+        print "uncertain R+K-(Examination): " + str(sum(A11RList)*1.0/testLength)
+        
+        print "&  " + str(round(sum(A0RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(A1RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(A2RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(A3RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(A4RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(A5RList)*1.0/testLength,4))+'  \\\\ \hline'
+    
+#==============================================================================
+#     print A0R
+#     print A1R
+#     print A2R
+#     print A3R
+#     print A4R
+#     print A5R
+#     print A10R
+#     print A11R
+#     print sum(A0R)/len(A0R)
+#     print sum(A1R)/len(A1R)
+#     print sum(A2R)/len(A2R)
+#     print sum(A3R)/len(A3R)
+#     print sum(A4R)/len(A4R)
+#     print sum(A5R)/len(A5R)
+#     print sum(A10R)/len(A10R)
+#     print sum(A11R)/len(A11R)
+#==============================================================================
+        
 def main2():
     # data 4
     #uncertainG = nx.Graph()
@@ -111,8 +292,8 @@ def main():
     #start = 'SSP2'
     # data 3
     #G = nx.read_gml("football_edit.gml")
-    G = nx.read_gml("dolphin_edit.gml")
-    #G = nx.karate_club_graph()
+    #G = nx.read_gml("dolphin_edit.gml")
+    G = nx.karate_club_graph()
     #uncertainG = addProb(G,prob=0.75,percent=0.25)
     uncertainG = addProb(G,prob=0.8,percent=0.25)
     #start = G.nodes()[random.randint(0,len(G.nodes()))]
@@ -545,8 +726,11 @@ def localCommunityIdentification(uncertainG,startNode,sampleNumber):
 #==============================================================================
     return DMax, S, RMax, [item.G for item in SGList], [item.R for item in SGList], SGList
             
-    
-            
+def addProbOrigin(G):
+    for a,b in G.edges():
+        G.edge[a][b]['prob'] = 1
+        G.edge[a][b]['weight'] = 1
+    return G    
             
 def addProb(G,prob=0.9,percent=0.15):
     for a,b in G.edges():
@@ -554,6 +738,7 @@ def addProb(G,prob=0.9,percent=0.15):
         while value <= 0 or value > 1:
             value = 0.5 * np.random.randn() + prob
         G.edge[a][b]['prob'] = value
+        G.edge[a][b]['weight'] = 1
     count = 0
     countNumber = percent * len(G.edges())
     nodeList = G.nodes()
@@ -568,7 +753,7 @@ def addProb(G,prob=0.9,percent=0.15):
         while value <= 0 or value > 1:
             value = 0.5 * np.random.randn() + (1-prob)
     
-        G.add_edge(nodeA,nodeB,prob=value)
+        G.add_edge(nodeA,nodeB,prob=value,weight=1)
         count += 1
     return G
     
@@ -610,5 +795,6 @@ def generateUncertainGraph():
 #==============================================================================
     return G
     
-A1Dict, A4Dict, uncertainG = main()
+evaluation()
+#A1Dict, A4Dict, uncertainG = main()
 #D, S, R, _, SGR, SGList, uncertainG, GList = main()
