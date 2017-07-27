@@ -72,10 +72,12 @@ def localCommunityIdentification(G,startNode):
     BIn = 0
     BTotal = helperB(startNode)#len(G[startNode])
     while label:
-        print R
-        print BIn
-        print BTotal
-        print D
+#==============================================================================
+#         print R
+#         print BIn
+#         print BTotal
+#         print D
+#==============================================================================
         RPrime = -float('inf')
         ShellNodeCount = -float('inf')
         for node in S:
@@ -102,42 +104,49 @@ def localCommunityIdentification(G,startNode):
             deltaPrime = count / 2 + previousCount
             tempBIn = BIn + deltaIn - deltaPrime
             tempBTotal = BTotal + deltaTotal - deltaPrime
-            tempRPrime = float(tempBIn)/float(tempBTotal)
-            tempShellNodeCount = len(set(G[node].keys()).intersection(S))
-            if len(D) == 1:
-                if tempShellNodeCount > ShellNodeCount or (tempShellNodeCount == ShellNodeCount and tempRPrime > RPrime):
-                    RPrime = tempRPrime
-                    ShellNodeCount = tempShellNodeCount
-                    popNodeList = [node]
-                    saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
-                    saveBInList = [tempBIn]
-                    saveBTotalList = [tempBTotal]
-                    saveRemoveSetList = [removeSet]
-                elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
-                    popNodeList.append(node)
-                    saveBList.append(tempB)
-                    saveBInList.append(tempBIn)
-                    saveBTotalList.append(tempBTotal)
-                    saveRemoveSetList.append(removeSet)
+            if abs(tempBTotal) <= 0.000001:
+                tempRPrime = 1
             else:
-                if tempRPrime > RPrime or (tempRPrime == RPrime and tempShellNodeCount > ShellNodeCount):
-                    RPrime = tempRPrime
-                    ShellNodeCount = tempShellNodeCount
-                    popNodeList = [node]
-                    saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
-                    saveBInList = [tempBIn]
-                    saveBTotalList = [tempBTotal]
-                    saveRemoveSetList = [removeSet]
-                elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
-                    popNodeList.append(node)
-                    saveBList.append(tempB)
-                    saveBInList.append(tempBIn)
-                    saveBTotalList.append(tempBTotal)
-                    saveRemoveSetList.append(removeSet)
+                tempRPrime = float(tempBIn)/float(tempBTotal)
+            tempShellNodeCount = len(set(G[node].keys()).intersection(S))
+#==============================================================================
+#             if len(D) == 1:
+#                 if tempShellNodeCount > ShellNodeCount or (tempShellNodeCount == ShellNodeCount and tempRPrime > RPrime):
+#                     RPrime = tempRPrime
+#                     ShellNodeCount = tempShellNodeCount
+#                     popNodeList = [node]
+#                     saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
+#                     saveBInList = [tempBIn]
+#                     saveBTotalList = [tempBTotal]
+#                     saveRemoveSetList = [removeSet]
+#                 elif tempRPrime == RPrime and tempShellNodeCount == ShellNodeCount:
+#                     popNodeList.append(node)
+#                     saveBList.append(tempB)
+#                     saveBInList.append(tempBIn)
+#                     saveBTotalList.append(tempBTotal)
+#                     saveRemoveSetList.append(removeSet)
+#             else:
+#==============================================================================
+            if tempRPrime > RPrime:# or (tempRPrime == RPrime and tempShellNodeCount > ShellNodeCount):
+                RPrime = tempRPrime
+                ShellNodeCount = tempShellNodeCount
+                popNodeList = [node]
+                saveBList = [tempB] #还需要再处理，去掉已经变成0的元素 可能需要写成[dict(tempB)]
+                saveBInList = [tempBIn]
+                saveBTotalList = [tempBTotal]
+                saveRemoveSetList = [removeSet]
+            elif tempRPrime == RPrime:# and tempShellNodeCount == ShellNodeCount:
+                popNodeList.append(node)
+                saveBList.append(tempB)
+                saveBInList.append(tempBIn)
+                saveBTotalList.append(tempBTotal)
+                saveRemoveSetList.append(removeSet)
         if RPrime > R:# or (RPrime > 0.98 * R and ShellNodeCount >= 2):
-            print popNodeList
-            print RPrime
-            print ShellNodeCount
+#==============================================================================
+#             print popNodeList
+#             print RPrime
+#             print ShellNodeCount
+#==============================================================================
             index = random.randint(0,len(popNodeList)-1)
             popNode = popNodeList[index]
             saveB = saveBList[index]
@@ -160,7 +169,7 @@ def localCommunityIdentification(G,startNode):
             BTotal = saveBTotal
         else:
             label = False
-    return D, S
+    return D, R#S
     
 def addProb(G,prob=0.9,percent=0.15):
     for a,b in G.edges():
@@ -185,7 +194,38 @@ def addProb(G,prob=0.9,percent=0.15):
         G.add_edge(nodeA,nodeB,prob=value)
         count += 1
     return G
-    
+
+#==============================================================================
+# G = nx.Graph()
+# G.add_edge(1,2,prob=0.9)
+# G.add_edge(1,3,prob=0.9)
+# G.add_edge(1,4,prob=0.9)
+# G.add_edge(1,5,prob=0.9)
+# G.add_edge(1,6,prob=0.9)
+# G.add_edge(2,3,prob=0.9)
+# G.add_edge(2,4,prob=0.9)
+# G.add_edge(2,5,prob=0.9)
+# G.add_edge(2,6,prob=0.9)
+# G.add_edge(3,4,prob=0.9)
+# G.add_edge(3,5,prob=0.9)
+# G.add_edge(3,6,prob=0.9)
+# G.add_edge(4,5,prob=0.9)
+# G.add_edge(4,6,prob=0.9)
+# G.add_edge(5,6,prob=0.9)
+# 
+# G.add_edge(6,7,prob=0.8)
+# 
+# G.add_edge(7,8,prob=0.8)
+# G.add_edge(7,9,prob=0.8)
+# G.add_edge(7,10,prob=0.8)
+# G.add_edge(8,9,prob=0.8)
+# G.add_edge(8,10,prob=0.8)
+# G.add_edge(9,10,prob=0.8)
+# G.add_edge(9,11,prob=0.8)
+# start = 6
+# result = localCommunityIdentification(G,start)
+# print result
+#==============================================================================
 #==============================================================================
 # G = nx.Graph()
 # G.add_edge(1,2)
@@ -218,14 +258,17 @@ def addProb(G,prob=0.9,percent=0.15):
 # G.add_edge(11,13)
 # G = addProb(G)
 # start = 13
-# print iterativeExpansion(G,start)
+# print localCommunityIdentification(G,start)
+# #print iterativeExpansion(G,start)
 #==============================================================================
 #==============================================================================
 # G = generateGraph()
-# G = addProb(G,prob=0.9,percent=0.25)
+# #G = addProb(G,prob=0.9,percent=0.25)
+# for a,b in G.edges():
+#     G.edge[a][b]['prob'] = 0.9
 # start = 7
-# result = iterativeExpansion(G,start)
-# print result
+# result = localCommunityIdentification(G,start)
+# print result[0]
 #==============================================================================
 #==============================================================================
 # G = nx.karate_club_graph() # 2被分错了，start=1时[24, 25, 28, 31]被单独了出来，但是总体很不错，有时候也会独立[16, 10, 4, 5, 6]
@@ -235,18 +278,51 @@ def addProb(G,prob=0.9,percent=0.15):
 # result = iterativeExpansion(G,start)
 # print result
 #==============================================================================
-G = nx.read_gml("football_edit.gml") # value = 10这一组被分成了两组
-G = addProb(G,prob=0.9,percent=0.25)
-start = 'Kent'
-#print len(localCommunityIdentification(G,start)[0])
-result = iterativeExpansion(G,start)
-print result
-for temp in result:
-    for item in temp:
-        print G.node[item]
-    print '*******************'
-
-            
+#==============================================================================
+# G = nx.read_gml("football_edit.gml") # value = 10这一组被分成了两组
+# G = addProb(G,prob=0.9,percent=0.25)
+# start = 'Kent'
+# #print len(localCommunityIdentification(G,start)[0])
+# result = iterativeExpansion(G,start)
+# print result
+# for temp in result:
+#     for item in temp:
+#         print G.node[item]
+#     print '*******************'
+#==============================================================================
+#==============================================================================
+# G = nx.Graph()
+# File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
+# for line in File:
+#     edgeList = line.strip().split('\t')
+#     G.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+# start = 'BIK1'
+# result = iterativeExpansion(G,start)
+# print result
+#==============================================================================
+#==============================================================================
+# G = nx.Graph()
+# G.add_edge(1,2,prob=0.5)
+# G.add_edge(1,3,prob=0.5)
+# G.add_edge(2,3,prob=0.5)
+# G.add_edge(2,4,prob=0.11)
+# G.add_edge(3,5,prob=0.11)
+# G.add_edge(4,5,prob=1)
+# G.add_edge(4,6,prob=1)
+# G.add_edge(4,7,prob=1)
+# G.add_edge(5,6,prob=1)
+# G.add_edge(5,7,prob=1)
+# G.add_edge(6,7,prob=1)
+# G.add_edge(6,8,prob=0.19)
+# G.add_edge(6,9,prob=0.001)
+# G.add_edge(7,10,prob=0.009)
+# G.add_edge(8,9,prob=0.28)
+# G.add_edge(8,10,prob=0.94)
+# G.add_edge(9,10,prob=0.28)
+# start = 1
+# result = iterativeExpansion(G,start)
+# print result
+#==============================================================================
 #==============================================================================
 # G = nx.Graph()
 # G.add_edge(1,4)
