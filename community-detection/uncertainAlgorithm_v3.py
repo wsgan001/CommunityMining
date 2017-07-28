@@ -67,7 +67,7 @@ def evaluation():
         UA5RList = []
         UA10RList = []
         UA11RList = []
-        testLength = 40
+        testLength = 20
         for testNumber in xrange(testLength):
 #==============================================================================
 #         uncertainG = nx.Graph()
@@ -78,22 +78,24 @@ def evaluation():
 #==============================================================================
             #start = 'SSP2'
             # data 3
-            G = nx.Graph()
-            File = open("binary_networks/network.dat","r")
-            for line in File:
-                nodeA, nodeB = line.strip().split("\t")
-                G.add_edge(int(nodeA),int(nodeB))
-            dic = {}
-            label = {}
-            File = open("binary_networks/community.dat","r")
-            for line in File:
-                node, communitys = line.strip().split("\t")
-                G.node[int(node)]['value'] = int(communitys)
-                label[int(node)] = int(communitys)
-                if int(communitys) not in dic:
-                    dic[int(communitys)] = set([int(node)])
-                else:
-                    dic[int(communitys)].add(int(node))
+#==============================================================================
+#             G = nx.Graph()
+#             File = open("binary_networks/network.dat","r")
+#             for line in File:
+#                 nodeA, nodeB = line.strip().split("\t")
+#                 G.add_edge(int(nodeA),int(nodeB))
+#             dic = {}
+#             label = {}
+#             File = open("binary_networks/community.dat","r")
+#             for line in File:
+#                 node, communitys = line.strip().split("\t")
+#                 G.node[int(node)]['value'] = int(communitys)
+#                 label[int(node)] = int(communitys)
+#                 if int(communitys) not in dic:
+#                     dic[int(communitys)] = set([int(node)])
+#                 else:
+#                     dic[int(communitys)].add(int(node))
+#==============================================================================
             #G = nx.read_gml("football_edit.gml")
             #G = nx.read_gml("dolphin_edit.gml")
             G = nx.karate_club_graph()
@@ -115,6 +117,14 @@ def evaluation():
             A5R = []
             A10R = []
             A11R = []
+            UA0R = []
+            UA1R = []
+            UA2R = []
+            UA3R = []
+            UA4R = []
+            UA5R = []
+            UA10R = []
+            UA11R = []
         
             GList = evaluate.sampleGraph(uncertainG,100)
             #print "finish sampling"
@@ -130,6 +140,7 @@ def evaluation():
                     RList0.append(calculateR(item,D0))
                 #print sum(RList0)/100.
                 A0R.append(sum(RList0)/100.)
+                UA0R.append(calculateUncertainR(G,D0))
                 
                 D1, _ = uav1.localCommunityIdentification(uncertainG,start)
                 #print D1
@@ -138,6 +149,7 @@ def evaluation():
                     RList1.append(calculateR(item,D1))
                 #print sum(RList1)/100.
                 A1R.append(sum(RList1)/100.)
+                UA1R.append(calculateUncertainR(G,D1))
                 
                 D2, _ = mU1.localCommunityIdentification(uncertainG,start,0,False)
                 #print D2
@@ -146,6 +158,7 @@ def evaluation():
                     RList2.append(calculateR(item,D2))
                 #print sum(RList2)/100.
                 A2R.append(sum(RList2)/100.)
+                UA2R.append(calculateUncertainR(G,D2))
                 
                 D3, _ = mU1.localCommunityIdentification(uncertainG,start,0)
                 #print D3
@@ -154,7 +167,7 @@ def evaluation():
                     RList3.append(calculateR(item,D3))
                 #print sum(RList3)/100.
                 A3R.append(sum(RList3)/100.)
-                
+                UA3R.append(calculateUncertainR(G,D3))
                 
                 D10, _ = mU1.localCommunityIdentification(uncertainG,start,2,False) #karate上非常不稳定，有时很好有时很不好
                 #print D10
@@ -163,6 +176,7 @@ def evaluation():
                     RList10.append(calculateR(item,D10))
                 #print sum(RList10)/100.
                 A10R.append(sum(RList10)/100.)
+                UA10R.append(calculateUncertainR(G,D10))
                 
                 D11, _ = mU1.localCommunityIdentification(uncertainG,start,3,False)
                 #print D11
@@ -171,6 +185,7 @@ def evaluation():
                     RList11.append(calculateR(item,D11))
                 #print sum(RList11)/100.
                 A11R.append(sum(RList11)/100.)
+                UA11R.append(calculateUncertainR(G,D11))
         
                 
             # Louvain Community Detection weighted version
@@ -189,6 +204,7 @@ def evaluation():
                 for item in GList:
                     RList4.append(calculateR(item,D4))
                 A4R.append(sum(RList4)/100.)
+                UA4R.append(calculateUncertainR(G,D4))
                 
             # Louvain Community Detection
             A5Result = community.best_partition(uncertainG,weight='prob')
@@ -206,6 +222,7 @@ def evaluation():
                 for item in GList:
                     RList5.append(calculateR(item,D5))
                 A5R.append(sum(RList5)/100.)
+                UA5R.append(calculateUncertainR(G,D5))
             
             A0RList.append(sum(A0R)/len(A0R))
             A1RList.append(sum(A1R)/len(A1R))
@@ -215,7 +232,16 @@ def evaluation():
             A5RList.append(sum(A5R)/len(A5R))
             A10RList.append(sum(A10R)/len(A10R))
             A11RList.append(sum(A11R)/len(A11R))
-        
+            UA0RList.append(sum(UA0R)/len(UA0R))
+            UA1RList.append(sum(UA1R)/len(UA1R))
+            UA2RList.append(sum(UA2R)/len(UA2R))
+            UA3RList.append(sum(UA3R)/len(UA3R))
+            UA4RList.append(sum(UA4R)/len(UA4R))
+            UA5RList.append(sum(UA5R)/len(UA5R))
+            UA10RList.append(sum(UA10R)/len(UA10R))
+            UA11RList.append(sum(UA11R)/len(UA11R))
+            
+        print "sampleR result: "
         print "original R: " + str(sum(A0RList)*1.0/testLength)
         print "uncertain R: " + str(sum(A1RList)*1.0/testLength)
         print "uncertain R+K: " + str(sum(A2RList)*1.0/testLength)
@@ -231,6 +257,26 @@ def evaluation():
             + "&  " + str(round(sum(A3RList)*1.0/testLength,4))\
             + "&  " + str(round(sum(A4RList)*1.0/testLength,4))\
             + "&  " + str(round(sum(A5RList)*1.0/testLength,4))+'  \\\\ \hline'
+        
+        print "uncertainR result: "
+        print "original R: " + str(sum(UA0RList)*1.0/testLength)
+        print "uncertain R: " + str(sum(UA1RList)*1.0/testLength)
+        print "uncertain R+K: " + str(sum(UA2RList)*1.0/testLength)
+        print "uncertain R+K(Examination): " + str(sum(UA3RList)*1.0/testLength)
+        print "original louvain: " + str(sum(UA4RList)*1.0/testLength)
+        print "uncertain louvain: " + str(sum(UA5RList)*1.0/testLength)
+        print "uncertain R+K/(Examination): " + str(sum(UA10RList)*1.0/testLength)
+        print "uncertain R+K-(Examination): " + str(sum(UA11RList)*1.0/testLength)
+        
+        print "&  " + str(round(sum(UA0RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(UA1RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(UA2RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(UA3RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(UA4RList)*1.0/testLength,4))\
+            + "&  " + str(round(sum(UA5RList)*1.0/testLength,4))+'  \\\\ \hline'
+            
+        print "--------------------------------------------------"
+        
 
 def evaluationSampleR():
     percentList = [0,0.1,0.2,0.3,0.4]
@@ -255,22 +301,24 @@ def evaluationSampleR():
 #==============================================================================
             #start = 'SSP2'
             # data 3
-            G = nx.Graph()
-            File = open("binary_networks/network.dat","r")
-            for line in File:
-                nodeA, nodeB = line.strip().split("\t")
-                G.add_edge(int(nodeA),int(nodeB))
-            dic = {}
-            label = {}
-            File = open("binary_networks/community.dat","r")
-            for line in File:
-                node, communitys = line.strip().split("\t")
-                G.node[int(node)]['value'] = int(communitys)
-                label[int(node)] = int(communitys)
-                if int(communitys) not in dic:
-                    dic[int(communitys)] = set([int(node)])
-                else:
-                    dic[int(communitys)].add(int(node))
+#==============================================================================
+#             G = nx.Graph()
+#             File = open("binary_networks/network.dat","r")
+#             for line in File:
+#                 nodeA, nodeB = line.strip().split("\t")
+#                 G.add_edge(int(nodeA),int(nodeB))
+#             dic = {}
+#             label = {}
+#             File = open("binary_networks/community.dat","r")
+#             for line in File:
+#                 node, communitys = line.strip().split("\t")
+#                 G.node[int(node)]['value'] = int(communitys)
+#                 label[int(node)] = int(communitys)
+#                 if int(communitys) not in dic:
+#                     dic[int(communitys)] = set([int(node)])
+#                 else:
+#                     dic[int(communitys)].add(int(node))
+#==============================================================================
             #G = nx.read_gml("football_edit.gml")
             #G = nx.read_gml("dolphin_edit.gml")
             G = nx.karate_club_graph()
@@ -1156,6 +1204,7 @@ def generateUncertainGraph():
 #==============================================================================
     return G
     
-evaluationUncertainR()
+#evaluationUncertainR()
+evaluation()
 #A1Dict, A4Dict, uncertainG = main()
 #D, S, R, _, SGR, SGList, uncertainG, GList = main()
