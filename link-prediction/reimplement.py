@@ -11,6 +11,11 @@ Created on Tue Aug  8 18:25:59 2017
 import networkx as nx
 from sklearn.model_selection import train_test_split
 
+def common_neighbor(G):
+    def predict(u, v):
+        return len(list(nx.common_neighbors(G, u, v)))
+    return ((u, v, predict(u, v)) for u, v in nx.non_edges(G))
+
 G = nx.Graph()
 File = open("USAir.txt","r")
 for line in File:
@@ -27,7 +32,8 @@ for count in xrange(100):
     newG = nx.Graph()
     for nodeA, nodeB in edgeTrain:
         newG.add_edge(nodeA,nodeB)
-    preds = nx.adamic_adar_index(newG)
+    preds = common_neighbor(newG)
+    #preds = nx.adamic_adar_index(newG)
     #preds = nx.jaccard_coefficient(newG)
     
     result = []
@@ -39,4 +45,7 @@ for count in xrange(100):
         if G.has_edge(nodeA,nodeB):
             right += 1
     accuracyList.append(float(right)/100.)
+    
+print sum(accuracyList)/100.
+
 
