@@ -122,6 +122,38 @@ def LNBVersion2(G):
         return result
     return ((u, v, predict(u, v)) for u, v in nx.non_edges(G))
 
+def LNBVersion3(G,para,beyesPara):
+    nodeNumber = len(G.nodes())
+    M = nodeNumber * (nodeNumber - 1) / 2
+    MT = 0
+    for a, b in G.edges():
+        MT += G.edge[a][b]['prob'] ** beyesPara
+    s = float(M)/float(MT) - 1
+    dic = {}
+    for node in G.nodes():
+        neighborList = G[node].keys()
+        length = len(neighborList)
+        connected = 0
+        disconnected = 0
+        for i in xrange(length-1):
+            for j in xrange(i+1,length):
+                weight = G.edge[node][neighborList[i]]['prob'] * G.edge[node][neighborList[j]]['prob']
+                if G.has_edge(neighborList[i],neighborList[j]):
+                    prob = G.edge[neighborList[i]][neighborList[j]]['prob'] ** beyesPara
+                    connected += prob * weight
+                    disconnected += (1-prob) * weight
+                else:
+                    disconnected += 1 * weight
+        dic[node] = float(connected+1)/float(disconnected+1)
+    def predict(u, v):
+        result = 0
+        for node in nx.common_neighbors(G, u, v):
+            #result += (np.log10(s) + np.log10(dic[node])) * (G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)
+            #result += (np.log10(s) + np.log10(dic[node])) / np.log10(len(G[node]))
+            result += (np.log10(s) + np.log10(dic[node])) / len(G[node]) * (G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)
+        return result
+    return ((u, v, predict(u, v)) for u, v in nx.non_edges(G))
+
 def addProb(G,prob=0.9,percent=0.15):
     for a,b in G.edges():
         value = 0.5 * np.random.randn() + prob
@@ -164,14 +196,15 @@ for line in File:
     G.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
 
 modeList = [0]
-paraList = [1,0,0.3,0.6]#,0.4,0.5,0.6,0.7,0.8,0.9]
+paraList = [1]#,0,0.3,0.6]#,0.4,0.5,0.6,0.7,0.8,0.9]
 for para in paraList:
     for mode in modeList:
         print "para = " + str(para) + " mode = " + str(mode)
         accuracyList = []
         accuracyCompareList = []
         accuracyCompare2List = []
-        testNumber = 100
+        accuracyCompare3List = []
+        testNumber = 40
         for _ in xrange(testNumber):
             edgeTrain, edgeTest = train_test_split(G.edges(), test_size=0.1)
             
@@ -257,6 +290,32 @@ for para in paraList:
             print float(right)/topK*1.0
             accuracyCompare2List.append(float(right)/topK*1.0)
             
+            # compare
+            
+            preds = LNBVersion3(newG,para,1)
+            #preds = LNBSample(newG,0,1)
+            #preds = common_neighbor(newG,mode,para)
+            #preds = nx.adamic_adar_index(newG)
+            #preds = nx.jaccard_coefficient(newG)
+            
+            result = []
+            for u, v, p in preds:
+                result.append([u,v,p])
+            result.sort(key=lambda x:x[2],reverse=True)
+            right = 0
+            count = 0
+            topK = 100
+            for nodeA, nodeB, score in result[:topK]:
+                if G.has_edge(nodeA,nodeB):
+                    right += 1
+                    #print str(count) + ": success"
+                else:
+                    #print str(count) + ": fail"
+                    pass
+                count += 1
+            print float(right)/topK*1.0
+            accuracyCompare3List.append(float(right)/topK*1.0)
+            
             print "-----------"
             
         print accuracyList
@@ -265,3 +324,5 @@ for para in paraList:
         print sum(accuracyCompareList)*1.0/testNumber
         print accuracyCompare2List
         print sum(accuracyCompare2List)*1.0/testNumber
+        print accuracyCompare3List
+        print sum(accuracyCompare3List)*1.0/testNumber
