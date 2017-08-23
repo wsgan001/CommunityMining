@@ -5,7 +5,8 @@ Created on Tue Aug  8 22:18:08 2017
 
 @author: zhangchi
 """
-
+from collections import Counter
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -179,6 +180,35 @@ def addProb(G,prob=0.9,percent=0.15):
         count += 1
     return G
 
+def addProbNew(G,prob=0.9,percent=0.15):
+    for a,b in G.edges():
+        value = 0.5 * np.random.randn() + prob
+        while value <= 0 or value > 1:
+            value = 0.5 * np.random.randn() + prob
+        G.edge[a][b]['prob'] = value
+        #G.edge[a][b]['weight'] = 1
+    count = 0
+    countNumber = percent * len(G.edges())
+    nodeList = G.degree().keys()
+    edgeNumber = len(G.edges()) * 2
+    probabilityList = G.degree().values()
+    for i in xrange(len(probabilityList)):
+        probabilityList[i] = float(probabilityList[i])/float(edgeNumber)
+    while count < countNumber:
+        nodeA = np.random.choice(nodeList, p=probabilityList)
+        nodeB = np.random.choice(nodeList, p=probabilityList)
+        while nodeA == nodeB or nodeB in G[nodeA]:
+            nodeB = np.random.choice(nodeList, p=probabilityList)
+            
+        value = 0.5 * np.random.randn() + (1-prob)
+        while value <= 0 or value > 1:
+            value = 0.5 * np.random.randn() + (1-prob)
+    
+        G.add_edge(nodeA,nodeB,prob=value)#,weight=1)
+        count += 1
+    return G
+
+
 # =============================================================================
 # G = nx.Graph()
 # File = open("USAir.txt","r") # 0.1, 0.2, 0.3这附近比较好
@@ -194,6 +224,10 @@ File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/T
 for line in File:
     edgeList = line.strip().split('\t')
     G.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+    
+degree_count = Counter(sorted(nx.degree(G).values()))
+plt.plot(degree_count.keys(), degree_count.values(), 'y--')
+plt.show()
 
 modeList = [0]
 paraList = [1]#,0,0.3,0.6]#,0.4,0.5,0.6,0.7,0.8,0.9]
