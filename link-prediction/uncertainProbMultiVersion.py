@@ -11,15 +11,24 @@ import networkx as nx
 import numpy as np
 from sklearn.model_selection import train_test_split
 from LNBSampleBased import sampleBasedLNBCalculation
+import reimplement as ri
+
+def helper(G, node):
+    result = 0
+    for item in G[node]:
+        result += G[node][item]['prob']
+    return result
 
 def common_neighbor(G,mode=0,para=1):
     def predict(u, v):
         result = 0
         for node in nx.common_neighbors(G, u, v):
             if mode == 0:
-                result += (G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)
+                #result += (G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)
+                result += ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / helper(G, node)#len(G[node])
             elif mode == 1:
-                result += (G.edge[node][u]['prob'] ** para) + (G.edge[node][v]['prob'] ** para)
+                #result += (G.edge[node][u]['prob'] ** para) + (G.edge[node][v]['prob'] ** para)
+                result += ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / len(G[node])
             else:
                 result += 1
         return result
@@ -180,7 +189,7 @@ def addProb(G,prob=0.9,percent=0.15):
         count += 1
     return G
 
-def addProbNew(G,prob=0.9,percent=0.15):
+def addProbNew(G,originG,prob=0.9,percent=0.15):
     for a,b in G.edges():
         value = 0.5 * np.random.randn() + prob
         while value <= 0 or value > 1:
@@ -197,7 +206,7 @@ def addProbNew(G,prob=0.9,percent=0.15):
     while count < countNumber:
         nodeA = np.random.choice(nodeList, p=probabilityList)
         nodeB = np.random.choice(nodeList, p=probabilityList)
-        while nodeA == nodeB or nodeB in G[nodeA]:
+        while nodeA == nodeB or nodeB in G[nodeA] or originG.has_edge(nodeA,nodeB):
             nodeB = np.random.choice(nodeList, p=probabilityList)
             
         value = 0.5 * np.random.randn() + (1-prob)
@@ -226,7 +235,10 @@ for line in File:
     G.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
     
 degree_count = Counter(sorted(nx.degree(G).values()))
-plt.plot(degree_count.keys(), degree_count.values(), 'y--')
+keys = degree_count.keys()
+keys.sort()
+values = [degree_count[item] for item in keys]
+plt.plot(keys, values, 'y')
 plt.show()
 
 modeList = [0]
@@ -234,8 +246,11 @@ paraList = [1]#,0,0.3,0.6]#,0.4,0.5,0.6,0.7,0.8,0.9]
 for para in paraList:
     for mode in modeList:
         print "para = " + str(para) + " mode = " + str(mode)
+        probList = []
+        weightList = []
         accuracyList = []
         accuracyCompareList = []
+        accuracyCompare1List = []
         accuracyCompare2List = []
         accuracyCompare3List = []
         testNumber = 40
@@ -247,6 +262,60 @@ for para in paraList:
                 #newG.add_edge(nodeA,nodeB)
                 newG.add_edge(nodeA,nodeB,prob=G.edge[nodeA][nodeB]['prob'])
             #newG = addProb(newG,prob=0.8,percent=0.2)
+            #newG = addProbNew(newG,G,prob=0.8,percent=0.2)
+            
+            degree_count = Counter(sorted(nx.degree(newG).values()))
+            keys = degree_count.keys()
+            keys.sort()
+            values = [degree_count[item] for item in keys]
+            plt.plot(keys, values, 'y')
+            plt.show()
+            
+            # compare
+            
+            preds = common_neighbor(newG,0)
+            
+            result = []
+            for u, v, p in preds:
+                result.append([u,v,p])
+            result.sort(key=lambda x:x[2],reverse=True)
+            right = 0
+            count = 0
+            topK = 100
+            for nodeA, nodeB, score in result[:topK]:
+                if G.has_edge(nodeA,nodeB):
+                    right += 1
+                    #print str(count) + ": success"
+                else:
+                    #print str(count) + ": fail"
+                    pass
+                count += 1
+            print float(right)/topK*1.0
+            probList.append(float(right)/topK*1.0)
+            
+            # compare
+            
+            preds = common_neighbor(newG,1)
+            
+            result = []
+            for u, v, p in preds:
+                result.append([u,v,p])
+            result.sort(key=lambda x:x[2],reverse=True)
+            right = 0
+            count = 0
+            topK = 100
+            for nodeA, nodeB, score in result[:topK]:
+                if G.has_edge(nodeA,nodeB):
+                    right += 1
+                    #print str(count) + ": success"
+                else:
+                    #print str(count) + ": fail"
+                    pass
+                count += 1
+            print float(right)/topK*1.0
+            weightList.append(float(right)/topK*1.0)
+            
+            # compare
             
             #preds = LNB(newG,1,1)
             preds = LNBSample(newG,para,1)
@@ -297,6 +366,32 @@ for para in paraList:
                 count += 1
             print float(right)/topK*1.0
             accuracyCompareList.append(float(right)/topK*1.0)
+            
+            # compare
+            
+            preds = ri.LNB(newG)
+            #preds = LNBSample(newG,0,1)
+            #preds = common_neighbor(newG,mode,para)
+            #preds = nx.adamic_adar_index(newG)
+            #preds = nx.jaccard_coefficient(newG)
+            
+            result = []
+            for u, v, p in preds:
+                result.append([u,v,p])
+            result.sort(key=lambda x:x[2],reverse=True)
+            right = 0
+            count = 0
+            topK = 100
+            for nodeA, nodeB, score in result[:topK]:
+                if G.has_edge(nodeA,nodeB):
+                    right += 1
+                    #print str(count) + ": success"
+                else:
+                    #print str(count) + ": fail"
+                    pass
+                count += 1
+            print float(right)/topK*1.0
+            accuracyCompare1List.append(float(right)/topK*1.0)
             
             # compare
             
@@ -352,10 +447,16 @@ for para in paraList:
             
             print "-----------"
             
+        print probList
+        print sum(probList)*1.0/testNumber
+        print weightList
+        print sum(weightList)*1.0/testNumber
         print accuracyList
         print sum(accuracyList)*1.0/testNumber
         print accuracyCompareList
         print sum(accuracyCompareList)*1.0/testNumber
+        print accuracyCompare1List
+        print sum(accuracyCompare1List)*1.0/testNumber
         print accuracyCompare2List
         print sum(accuracyCompare2List)*1.0/testNumber
         print accuracyCompare3List
