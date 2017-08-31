@@ -14,9 +14,12 @@ import networkx as nx
 def localRandomWalk(G, t):
     nodeList = G.nodes()
     nodeCount = len(nodeList)
+    edgeCount = len(G.edges()) * 2
     nodeDic = {}
+    degreeDic = {}
     for index, node in enumerate(nodeList):
         nodeDic[node] = index
+        degreeDic[node] = len(G[node])
         
     P = []
     for node in nodeList:
@@ -40,13 +43,22 @@ def localRandomWalk(G, t):
     for _ in xrange(t):
         Pi.append(np.dot(P,Pi[-1]))
         
-    return Pi[-1]
+    # this two lines only for SRW
+    Pi.pop(0)
+    Pi.append(sum(Pi))
+        
+    def predict(u, v):
+        return (Pi[-1][nodeDic[u]][nodeDic[v]] * float(degreeDic[u]) + \
+                Pi[-1][nodeDic[v]][nodeDic[u]] * float(degreeDic[v])) / float(edgeCount)
+        
+    return ((u, v, predict(u, v)) for u, v in nx.non_edges(G))
 
-G = nx.Graph()
-G.add_edge('a','b')
-G.add_edge('a','c')
-G.add_edge('a','d')
-G.add_edge('b','c')
-G.add_edge('b','d')
-G.add_edge('c','d')
-print localRandomWalk(G,2)
+def test():
+    G = nx.Graph()
+    G.add_edge('a','b')
+    G.add_edge('a','c')
+    G.add_edge('a','d')
+    G.add_edge('b','c')
+    G.add_edge('b','d')
+    G.add_edge('c','d')
+    result = localRandomWalk(G,2)
