@@ -32,6 +32,36 @@ def generateDicBySample(G):
         dic[node] = sum(dic[node])/sampleCount
     return dic
 
+def generateDicBySampleNew(G):
+    dic = {}
+    for u, v in nx.non_edges(G):
+        for node in nx.common_neighbors(G, u, v):
+            dic[(node,u,v)] = 0 # 避免空的之后没法除
+        
+    sampleCount = 40
+    sampleList = []
+    for index in xrange(sampleCount):
+        #print index
+        newG = nx.Graph()
+        for nodeA, nodeB in G.edges():
+            probability = G[nodeA][nodeB]['prob']
+            if np.random.choice([1,0], p=[probability,1-probability]) == 1:
+                newG.add_edge(nodeA, nodeB)
+        sampleList.append(newG)
+        
+    for index,sample in enumerate(sampleList):
+        #print index
+        for u, v in nx.non_edges(G):
+            for node in nx.common_neighbors(G, u, v):
+                if sample.has_edge(node,u) and sample.has_edge(node,v):
+                    dic[(node,u,v)] += 1./len(sample[node])
+            
+    for u, v in nx.non_edges(G):
+        for node in nx.common_neighbors(G, u, v):
+            dic[(node,u,v)] = dic[(node,u,v)]/sampleCount
+        
+    return dic
+
 def sample(G,node,u,v):
     probList = []
     for item in G[node]:
@@ -55,6 +85,7 @@ def helper(G, node):
     return result
 
 def common_neighbor(G,dic,mode=0,para=1):
+    # 3, 1, 0, 2
     def predict(u, v):
         result = 0
         for node in nx.common_neighbors(G, u, v):
@@ -65,7 +96,7 @@ def common_neighbor(G,dic,mode=0,para=1):
             elif mode == 2:# weight的做法
                 result += ((G.edge[node][u]['prob'] ** para) + (G.edge[node][v]['prob'] ** para)) / helper(G, node)
             elif mode == 3:# 我认为的正确做法
-                result += ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) * sample(G,node,u,v)
+                result += dic[(node,u,v)]#((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) * sample(G,node,u,v)
             else:
                 result += 1
         return result
@@ -81,7 +112,7 @@ def LNBVersion2(G):#version2和version3类似，就用version3好了
         
     existEdgeNumber = 0
     nonexistEdgeNumber = 0
-        
+    
     for n1, n2 in G.edges():
         probability = G.edge[n1][n2]['prob']
         
@@ -118,7 +149,7 @@ def LNBVersion2(G):#version2和version3类似，就用version3好了
         return result
     return ((u, v, predict(u, v)) for u, v in nx.non_edges(G))
 
-def LNBVersion3(G,dic,mode,para,beyesPara):
+def LNBVersion3(G,dic_input,mode,para,beyesPara):
     nodeNumber = len(G.nodes())
     M = nodeNumber * (nodeNumber - 1) / 2
     MT = 0
@@ -149,7 +180,8 @@ def LNBVersion3(G,dic,mode,para,beyesPara):
             elif mode == 1:# 我最开始的错误做法
                 result += (np.log10(s) + np.log10(dic[node])) / len(G[node]) * (G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)
             elif mode == 2:# 我认为的正确做法
-                result += (np.log10(s) + np.log10(dic[node])) * sample(G,node,u,v) * (G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)
+                result += (np.log10(s) + np.log10(dic[node])) * dic_input[(node,u,v)]
+                #result += (np.log10(s) + np.log10(dic[node])) * sample(G,node,u,v) * (G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)
             #result += (np.log10(s) + np.log10(dic[node])) * (G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)
             #result += (np.log10(s) + np.log10(dic[node])) / np.log10(len(G[node]))
             #result += (np.log10(s) + np.log10(dic[node])) / helper(G, node) * (G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)
@@ -210,24 +242,21 @@ def addProbNew(G,originG,prob=0.9,percent=0.15):
     return G
 
 
+G = nx.Graph()
+File = open("USAir.txt","r") # 0.1, 0.2, 0.3这附近比较好
+for line in File:
+    lineList = line.strip().split("    ")
+    nodeA = int(lineList[0])
+    nodeB = int(lineList[1])
+    G.add_edge(nodeA,nodeB)
+
 # =============================================================================
 # G = nx.Graph()
-# File = open("USAir.txt","r") # 0.1, 0.2, 0.3这附近比较好
+# File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
 # for line in File:
-#     lineList = line.strip().split("    ")
-#     nodeA = int(lineList[0])
-#     nodeB = int(lineList[1])
-#     G.add_edge(nodeA,nodeB)
+#     edgeList = line.strip().split('\t')
+#     G.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
 # =============================================================================
-
-G = nx.Graph()
-File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
-for line in File:
-    edgeList = line.strip().split('\t')
-    G.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
-print "start sample"
-dic = []
-print "finish sample"
     
 degree_count = Counter(sorted(nx.degree(G).values()))
 keys = degree_count.keys()
@@ -255,10 +284,14 @@ for para in paraList:
             
             newG = nx.Graph()
             for nodeA, nodeB in edgeTrain:
-                #newG.add_edge(nodeA,nodeB)
-                newG.add_edge(nodeA,nodeB,prob=G.edge[nodeA][nodeB]['prob'])
+                newG.add_edge(nodeA,nodeB)
+                #newG.add_edge(nodeA,nodeB,prob=G.edge[nodeA][nodeB]['prob'])
             #newG = addProb(newG,prob=0.8,percent=0.2)
-            #newG = addProbNew(newG,G,prob=0.8,percent=0.2)
+            newG = addProbNew(newG,G,prob=0.8,percent=0.2)
+            
+            print "start sample"
+            dic = generateDicBySampleNew(newG)
+            print "finish sample"
             
             degree_count = Counter(sorted(nx.degree(newG).values()))
             keys = degree_count.keys()
@@ -392,7 +425,7 @@ for para in paraList:
             accuracyCompare4List.append(float(right)/topK*1.0)
             
             # compare
-            preds = LNBVersion3(G,dic,0,para,1)
+            preds = LNBVersion3(newG,dic,0,para,1)
             #preds = LNBVersion2(newG)
             #preds = LNBSample(newG,0,1)
             #preds = common_neighbor(newG,mode,para)
@@ -419,7 +452,7 @@ for para in paraList:
             
             # compare
             
-            preds = LNBVersion3(G,dic,1,para,1)
+            preds = LNBVersion3(newG,dic,1,para,1)
             #preds = LNBVersion3(newG,para,1)
             #preds = LNBSample(newG,0,1)
             #preds = common_neighbor(newG,mode,para)
@@ -446,7 +479,7 @@ for para in paraList:
             
             # compare
             
-            preds = LNBVersion3(G,dic,2,para,1)
+            preds = LNBVersion3(newG,dic,2,para,1)
             #preds = LNBVersion3(newG,para,1)
             #preds = LNBSample(newG,0,1)
             #preds = common_neighbor(newG,mode,para)
