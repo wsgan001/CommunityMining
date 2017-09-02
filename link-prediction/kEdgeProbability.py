@@ -10,7 +10,7 @@ import numpy as np
 
 # calculate the summation of the possibilities of all subsets with exactly k edges in S
 
-probList = [0.5, 0.6, 0.7, 0.8, 0.9, 0.5, 0.4, 0.2]
+probList = [0.7, 0.8]
 length = len(probList)
 dic = {}
 for i in xrange(1,length+1):
@@ -26,6 +26,12 @@ for r in xrange(1,l+1):
                 if (i,t/2,g) in dic and (i+t/2,t/2,k-g) in dic:
                     dic[(i,t,k)] += dic[(i,t/2,g)] * dic[(i+t/2,t/2,k-g)]
 print dic
-                
+  
+# =============================================================================
+# # 验算              
+# probList = [0.7, 0.8]
+# 0.5599999999999999*0.25+0.06*0.5+0.38*0.333333333 = 0.29666666653999996
+# 1./12*0.7*0.8-1./6*1.5+0.5 = 0.29666666666666663
+# =============================================================================
 
 
