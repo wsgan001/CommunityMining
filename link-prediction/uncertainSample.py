@@ -13,6 +13,9 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from LNBSampleBased import sampleBasedLNBCalculation
 import reimplement as ri
+from kEdgeProbability import Solution
+
+s = Solution()
 
 def generateDicBySample(G):
     dic = {}
@@ -37,6 +40,7 @@ def generateDicBySampleNew(G):
     for u, v in nx.non_edges(G):
         for node in nx.common_neighbors(G, u, v):
             dic[(node,u,v)] = 0 # 避免空的之后没法除
+    return dic
         
     sampleCount = 40
     sampleList = []
@@ -97,6 +101,25 @@ def common_neighbor(G,dic,mode=0,para=1):
                 result += ((G.edge[node][u]['prob'] ** para) + (G.edge[node][v]['prob'] ** para)) / helper(G, node)
             elif mode == 3:# 我认为的正确做法
                 result += dic[(node,u,v)]#((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) * sample(G,node,u,v)
+            elif mode == 4:# 我认为的正确做法
+                #result += s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+# =============================================================================
+#                 print "---"
+#                 probList = []
+#                 for neighbor in G[node]:
+#                     probList.append(G[node][neighbor]['prob'])
+#                 print probList
+#                 print dic[node]
+#                 print [G.edge[node][u]['prob'], G.edge[node][v]['prob']]
+#                 print s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+#                 print ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / helper(G, node)
+# # =============================================================================
+                probList = []
+                for item in G[node]:
+                    if item != u and item != v:
+                        probList.append(G[node][item]['prob'])
+                #print probList
+                result += s.getScoreV2(probList,[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
             else:
                 result += 1
         return result
@@ -138,7 +161,7 @@ def LNBVersion2(G):#version2和version3类似，就用version3好了
     
     for node in G.nodes():
         PWA1[node] = float(PWA1[node]+1)/float(existEdgeNumber-PWA1[node]+1)
-        PWA2[node] = float(PWA2[node]+1)/float(nonexistEdgeNumber-PWA2[node]+1)
+        PWA2[node] = float(PWA2[node]+1)/float(nonexistEdgeNumber-PWA2[node]+1  )
     
     def predict(u, v):
         result = 0
@@ -270,6 +293,7 @@ paraList = [1]#,0,0.3,0.6]#,0.4,0.5,0.6,0.7,0.8,0.9]
 for para in paraList:
     for mode in modeList:
         print "para = " + str(para) + " mode = " + str(mode)
+        accuracyCompareList = []
         accuracyCompare0List = []
         accuracyCompare1List = []
         accuracyCompare2List = []
@@ -285,13 +309,26 @@ for para in paraList:
             newG = nx.Graph()
             for nodeA, nodeB in edgeTrain:
                 newG.add_edge(nodeA,nodeB)
+                #newG.add_edge(nodeA,nodeB,prob=1)
                 #newG.add_edge(nodeA,nodeB,prob=G.edge[nodeA][nodeB]['prob'])
             #newG = addProb(newG,prob=0.8,percent=0.2)
             newG = addProbNew(newG,G,prob=0.8,percent=0.2)
             
-            print "start sample"
-            dic = generateDicBySampleNew(newG)
-            print "finish sample"
+# =============================================================================
+#             print "start sample"
+#             dic = generateDicBySampleNew(newG)
+#             print "finish sample"
+# =============================================================================
+            print "start calculation"
+            dic = {}
+            for node in newG.nodes():
+                probList = []
+                for neighbor in newG[node]:
+                    probList.append(newG[node][neighbor]['prob'])
+                if len(probList) >= 2:
+                    dic[node] = s.getDic(probList)
+            print "finish calculation"
+            
             
             degree_count = Counter(sorted(nx.degree(newG).values()))
             keys = degree_count.keys()
@@ -302,12 +339,13 @@ for para in paraList:
             
             # compare
             
-            preds = common_neighbor(newG,dic,3)
+            preds = common_neighbor(newG,dic,4)
             
             result = []
             for u, v, p in preds:
                 result.append([u,v,p])
             result.sort(key=lambda x:x[2],reverse=True)
+            print result[:100]
             right = 0
             count = 0
             topK = 100
@@ -320,7 +358,31 @@ for para in paraList:
                     pass
                 count += 1
             print float(right)/topK*1.0
-            accuracyCompare0List.append(float(right)/topK*1.0)
+            accuracyCompareList.append(float(right)/topK*1.0)
+            
+# =============================================================================
+#             # compare
+#             
+#             preds = common_neighbor(newG,dic,3)
+#             
+#             result = []
+#             for u, v, p in preds:
+#                 result.append([u,v,p])
+#             result.sort(key=lambda x:x[2],reverse=True)
+#             right = 0
+#             count = 0
+#             topK = 100
+#             for nodeA, nodeB, score in result[:topK]:
+#                 if G.has_edge(nodeA,nodeB):
+#                     right += 1
+#                     #print str(count) + ": success"
+#                 else:
+#                     #print str(count) + ": fail"
+#                     pass
+#                 count += 1
+#             print float(right)/topK*1.0
+#             accuracyCompare0List.append(float(right)/topK*1.0)
+# =============================================================================
             
             # compare
             
@@ -398,114 +460,120 @@ for para in paraList:
             print float(right)/topK*1.0
             accuracyCompare3List.append(float(right)/topK*1.0)
             
-            # compare
+# =============================================================================
+#             # compare
+#             
+#             preds = ri.LNB(newG)
+#             #preds = LNBSample(newG,0,1)
+#             #preds = common_neighbor(newG,mode,para)
+#             #preds = nx.adamic_adar_index(newG)
+#             #preds = nx.jaccard_coefficient(newG)
+#             
+#             result = []
+#             for u, v, p in preds:
+#                 result.append([u,v,p])
+#             result.sort(key=lambda x:x[2],reverse=True)
+#             right = 0
+#             count = 0
+#             topK = 100
+#             for nodeA, nodeB, score in result[:topK]:
+#                 if G.has_edge(nodeA,nodeB):
+#                     right += 1
+#                     #print str(count) + ": success"
+#                 else:
+#                     #print str(count) + ": fail"
+#                     pass
+#                 count += 1
+#             print float(right)/topK*1.0
+#             accuracyCompare4List.append(float(right)/topK*1.0)
+#             
+#             # compare
+#             preds = LNBVersion3(newG,dic,0,para,1)
+#             #preds = LNBVersion2(newG)
+#             #preds = LNBSample(newG,0,1)
+#             #preds = common_neighbor(newG,mode,para)
+#             #preds = nx.adamic_adar_index(newG)
+#             #preds = nx.jaccard_coefficient(newG)
+#             
+#             result = []
+#             for u, v, p in preds:
+#                 result.append([u,v,p])
+#             result.sort(key=lambda x:x[2],reverse=True)
+#             right = 0
+#             count = 0
+#             topK = 100
+#             for nodeA, nodeB, score in result[:topK]:
+#                 if G.has_edge(nodeA,nodeB):
+#                     right += 1
+#                     #print str(count) + ": success"
+#                 else:
+#                     #print str(count) + ": fail"
+#                     pass
+#                 count += 1
+#             print float(right)/topK*1.0
+#             accuracyCompare5List.append(float(right)/topK*1.0)
+#             
+#             # compare
+#             
+#             preds = LNBVersion3(newG,dic,1,para,1)
+#             #preds = LNBVersion3(newG,para,1)
+#             #preds = LNBSample(newG,0,1)
+#             #preds = common_neighbor(newG,mode,para)
+#             #preds = nx.adamic_adar_index(newG)
+#             #preds = nx.jaccard_coefficient(newG)
+#             
+#             result = []
+#             for u, v, p in preds:
+#                 result.append([u,v,p])
+#             result.sort(key=lambda x:x[2],reverse=True)
+#             right = 0
+#             count = 0
+#             topK = 100
+#             for nodeA, nodeB, score in result[:topK]:
+#                 if G.has_edge(nodeA,nodeB):
+#                     right += 1
+#                     #print str(count) + ": success"
+#                 else:
+#                     #print str(count) + ": fail"
+#                     pass
+#                 count += 1
+#             print float(right)/topK*1.0
+#             accuracyCompare6List.append(float(right)/topK*1.0)
+# =============================================================================
             
-            preds = ri.LNB(newG)
-            #preds = LNBSample(newG,0,1)
-            #preds = common_neighbor(newG,mode,para)
-            #preds = nx.adamic_adar_index(newG)
-            #preds = nx.jaccard_coefficient(newG)
-            
-            result = []
-            for u, v, p in preds:
-                result.append([u,v,p])
-            result.sort(key=lambda x:x[2],reverse=True)
-            right = 0
-            count = 0
-            topK = 100
-            for nodeA, nodeB, score in result[:topK]:
-                if G.has_edge(nodeA,nodeB):
-                    right += 1
-                    #print str(count) + ": success"
-                else:
-                    #print str(count) + ": fail"
-                    pass
-                count += 1
-            print float(right)/topK*1.0
-            accuracyCompare4List.append(float(right)/topK*1.0)
-            
-            # compare
-            preds = LNBVersion3(newG,dic,0,para,1)
-            #preds = LNBVersion2(newG)
-            #preds = LNBSample(newG,0,1)
-            #preds = common_neighbor(newG,mode,para)
-            #preds = nx.adamic_adar_index(newG)
-            #preds = nx.jaccard_coefficient(newG)
-            
-            result = []
-            for u, v, p in preds:
-                result.append([u,v,p])
-            result.sort(key=lambda x:x[2],reverse=True)
-            right = 0
-            count = 0
-            topK = 100
-            for nodeA, nodeB, score in result[:topK]:
-                if G.has_edge(nodeA,nodeB):
-                    right += 1
-                    #print str(count) + ": success"
-                else:
-                    #print str(count) + ": fail"
-                    pass
-                count += 1
-            print float(right)/topK*1.0
-            accuracyCompare5List.append(float(right)/topK*1.0)
-            
-            # compare
-            
-            preds = LNBVersion3(newG,dic,1,para,1)
-            #preds = LNBVersion3(newG,para,1)
-            #preds = LNBSample(newG,0,1)
-            #preds = common_neighbor(newG,mode,para)
-            #preds = nx.adamic_adar_index(newG)
-            #preds = nx.jaccard_coefficient(newG)
-            
-            result = []
-            for u, v, p in preds:
-                result.append([u,v,p])
-            result.sort(key=lambda x:x[2],reverse=True)
-            right = 0
-            count = 0
-            topK = 100
-            for nodeA, nodeB, score in result[:topK]:
-                if G.has_edge(nodeA,nodeB):
-                    right += 1
-                    #print str(count) + ": success"
-                else:
-                    #print str(count) + ": fail"
-                    pass
-                count += 1
-            print float(right)/topK*1.0
-            accuracyCompare6List.append(float(right)/topK*1.0)
-            
-            # compare
-            
-            preds = LNBVersion3(newG,dic,2,para,1)
-            #preds = LNBVersion3(newG,para,1)
-            #preds = LNBSample(newG,0,1)
-            #preds = common_neighbor(newG,mode,para)
-            #preds = nx.adamic_adar_index(newG)
-            #preds = nx.jaccard_coefficient(newG)
-            
-            result = []
-            for u, v, p in preds:
-                result.append([u,v,p])
-            result.sort(key=lambda x:x[2],reverse=True)
-            right = 0
-            count = 0
-            topK = 100
-            for nodeA, nodeB, score in result[:topK]:
-                if G.has_edge(nodeA,nodeB):
-                    right += 1
-                    #print str(count) + ": success"
-                else:
-                    #print str(count) + ": fail"
-                    pass
-                count += 1
-            print float(right)/topK*1.0
-            accuracyCompare7List.append(float(right)/topK*1.0)
+# =============================================================================
+#             # compare
+#             
+#             preds = LNBVersion3(newG,dic,2,para,1)
+#             #preds = LNBVersion3(newG,para,1)
+#             #preds = LNBSample(newG,0,1)
+#             #preds = common_neighbor(newG,mode,para)
+#             #preds = nx.adamic_adar_index(newG)
+#             #preds = nx.jaccard_coefficient(newG)
+#             
+#             result = []
+#             for u, v, p in preds:
+#                 result.append([u,v,p])
+#             result.sort(key=lambda x:x[2],reverse=True)
+#             right = 0
+#             count = 0
+#             topK = 100
+#             for nodeA, nodeB, score in result[:topK]:
+#                 if G.has_edge(nodeA,nodeB):
+#                     right += 1
+#                     #print str(count) + ": success"
+#                 else:
+#                     #print str(count) + ": fail"
+#                     pass
+#                 count += 1
+#             print float(right)/topK*1.0
+#             accuracyCompare7List.append(float(right)/topK*1.0)
+# =============================================================================
             
             print "-----------"
             
+        print accuracyCompareList
+        print sum(accuracyCompareList)*1.0/testNumber
         print accuracyCompare0List
         print sum(accuracyCompare0List)*1.0/testNumber
         print accuracyCompare1List
