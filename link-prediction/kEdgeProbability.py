@@ -6,7 +6,9 @@ Created on Fri Sep  1 21:23:25 2017
 @author: zhangchi
 """
 
-from time import time
+#from time import time
+import numpy as np
+#from decimal import Decimal
 
 class Solution(object):            
     def getDic(self, probList):
@@ -14,13 +16,13 @@ class Solution(object):
         self.length = len(probList)
         self.dic = {}
         for i in xrange(1,self.length+1):
-            self.dic[(i,1,1)] = probList[i-1]
-            self.dic[(i,1,0)] = 1 - probList[i-1]
+            self.dic[(i,1,1)] = np.float128(probList[i-1])
+            self.dic[(i,1,0)] = np.float128(1 - probList[i-1])
         self.merge(1,self.length)
         
         dicAfterDel = {}
         for i in xrange(self.length+1):
-            dicAfterDel[(1,self.length,i)] = self.dic[(1,self.length,i)]
+            dicAfterDel[(1,self.length,i)] = np.float128(self.dic[(1,self.length,i)])
         del self.dic
         
         return dicAfterDel
@@ -34,10 +36,10 @@ class Solution(object):
             self.merge(position,leftLength)
             self.merge(position+leftLength,rightLength)
             for i in xrange(length+1):
-                self.dic[(position,length,i)] = 0
+                self.dic[(position,length,i)] = np.float128(0)
                 for j in xrange(leftLength+1):
                     if (position,leftLength,j) in self.dic and (position+leftLength,rightLength,i-j) in self.dic:
-                        self.dic[(position,length,i)] += self.dic[(position,leftLength,j)] * self.dic[(position+leftLength,rightLength,i-j)]
+                        self.dic[(position,length,i)] += np.float128(self.dic[(position,leftLength,j)]) * np.float128(self.dic[(position+leftLength,rightLength,i-j)])
                         
     def getScore(self, dicFull, b):
         lengthA = len(dicFull) - 1
@@ -47,27 +49,106 @@ class Solution(object):
         
         resultDic = {}
         length = lengthA - lengthB
-        resultDic[(1,length,length+1)] = resultDic[(1,length,length+2)] = 0 # 避免后面if-else
+        resultDic[(1,length,length+1)] = resultDic[(1,length,length+2)] = np.float128(0) # 避免后面if-else
         for i in xrange(length,-1,-1):
-            resultDic[(1,length,i)] = (dicFull[(1,lengthA,i+2)] - \
+            value = (dicFull[(1,lengthA,i+2)] - \
             resultDic[(1,length,i+1)] * dicShort[(1,2,1)] - \
             resultDic[(1,length,i+2)] * dicShort[(1,2,0)]) / dicShort[(1,2,2)]
+            if i <= length / 2 and value < 1e-5: # 到后面会由于精度问题导致数字错的很多，不如舍弃
+                break
+            else:
+                resultDic[(1,length,i)] = value
             
         resultDic.pop((1,length,length+1))
         resultDic.pop((1,length,length+2))
         
         result = 0
+        #return resultDic
         for i in xrange(length+1):
-            result += 1/float(i+2) * resultDic[(1,length,i)]
+            if (1,length,i) in resultDic:
+                result += 1./float(i+2) * float(resultDic[(1,length,i)])
         return result * b[0] * b[1]
+    
+    def getScoreV2(self, probList, b): # 有些精度还是不能保证
+        if len(probList) == 0:
+            result = 1
+        else:
+            resultDic = self.getDic(probList)
+            
+            length = len(probList)
+            result = 0
+            #return resultDic
+            for i in xrange(length+1):
+                result += 1./float(i+2) * float(resultDic[(1,length,i)])
+        return result * b[0] * b[1]
+
+# =============================================================================
+# class Solution(object):            
+#     def getDic(self, probList):
+#         self.probList = probList
+#         self.length = len(probList)
+#         self.dic = {}
+#         for i in xrange(1,self.length+1):
+#             self.dic[(i,1,1)] = Decimal(probList[i-1])
+#             self.dic[(i,1,0)] = Decimal(1 - probList[i-1])
+#         self.merge(1,self.length)
+#         
+#         dicAfterDel = {}
+#         for i in xrange(self.length+1):
+#             dicAfterDel[(1,self.length,i)] = Decimal(self.dic[(1,self.length,i)])
+#         del self.dic
+#         
+#         return dicAfterDel
+#     
+#     def merge(self,position,length):
+#         if length == 1:
+#             return
+#         else:
+#             leftLength = length // 2 # 左边的长度<=右边的长度
+#             rightLength = length - leftLength
+#             self.merge(position,leftLength)
+#             self.merge(position+leftLength,rightLength)
+#             for i in xrange(length+1):
+#                 self.dic[(position,length,i)] = Decimal(0)
+#                 for j in xrange(leftLength+1):
+#                     if (position,leftLength,j) in self.dic and (position+leftLength,rightLength,i-j) in self.dic:
+#                         self.dic[(position,length,i)] += Decimal(self.dic[(position,leftLength,j)]) * Decimal(self.dic[(position+leftLength,rightLength,i-j)])
+#                         
+#     def getScore(self, dicFull, b):
+#         lengthA = len(dicFull) - 1
+#         
+#         lengthB = len(b)
+#         dicShort = self.getDic(b)
+#         
+#         resultDic = {}
+#         length = lengthA - lengthB
+#         resultDic[(1,length,length+1)] = resultDic[(1,length,length+2)] = Decimal(0) # 避免后面if-else
+#         for i in xrange(length,-1,-1):
+#             resultDic[(1,length,i)] = (dicFull[(1,lengthA,i+2)] - \
+#             resultDic[(1,length,i+1)] * dicShort[(1,2,1)] - \
+#             resultDic[(1,length,i+2)] * dicShort[(1,2,0)]) / dicShort[(1,2,2)]
+#             
+#         resultDic.pop((1,length,length+1))
+#         resultDic.pop((1,length,length+2))
+#         
+#         result = 0
+#         #return resultDic
+#         for i in xrange(length+1):
+#             result += 1./float(i+2) * float(resultDic[(1,length,i)])
+#         return result * b[0] * b[1]
+# =============================================================================
         
 def test():                     
     s = Solution()
     
-    a = [0.5, 0.6, 0.7]
-    dicFull = s.getDic(a)
+    a = [0.5,0.6,0.7]
+    dic1 = s.getDic(a)
+    
+    b = [0.5,0.6,0.7,0.8]
+    dic2 = s.getDic(b)
         
-    print s.getScore(dicFull, [0.6, 0.7])
+    print s.getScore(dic1, [0.6,0.7])
+    print s.getScore(dic2, [0.6,0.7])
     
 def testOrigin():                     
     s = Solution()
@@ -105,9 +186,11 @@ def test2():
         for i in xrange(lengthA+1):
             dicFull[(1,lengthA,i)] = dic[(1,lengthA,i)]
 
-t0 = time()
-test()
-t1 = time()
+# =============================================================================
+# t0 = time()
+# test()
+# t1 = time()
+# =============================================================================
 #print t1 - t0
 
 # =============================================================================
