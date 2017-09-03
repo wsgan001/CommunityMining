@@ -6,18 +6,21 @@ Created on Fri Sep  1 21:23:25 2017
 @author: zhangchi
 """
 
-class Solution(object):
-    def __init__(self, probList):
+class Solution(object):            
+    def getResult(self, probList):
         self.probList = probList
         self.length = len(probList)
+        if self.length == 0:
+            return 1
         self.dic = {}
         for i in xrange(1,self.length+1):
             self.dic[(i,1,1)] = probList[i-1]
             self.dic[(i,1,0)] = 1 - probList[i-1]
-            
-    def getResult(self):
         self.merge(1,self.length)
-        return self.dic
+        result = 0
+        for i in xrange(self.length+1):
+            result += 1/float(i+2) * self.dic[(1,self.length,i)]
+        return self.dic, result
     
     def merge(self,position,length):
         if length == 1:
@@ -32,10 +35,78 @@ class Solution(object):
                 for j in xrange(leftLength+1):
                     if (position,leftLength,j) in self.dic and (position+leftLength,rightLength,i-j) in self.dic:
                         self.dic[(position,length,i)] += self.dic[(position,leftLength,j)] * self.dic[(position+leftLength,rightLength,i-j)]
-                        
-s = Solution([0.6,0.7,0.8])
-dic = s.getResult()
-print dic
+   
+def test():                     
+    s = Solution()
+    a = [0.5]
+    dic, result = s.getResult(a)
+    for i in xrange(len(a)+1):
+        print str((1,len(a),i)) + ":" + str(dic[(1,len(a),i)])
+    print result
+    
+test()
+
+# =============================================================================
+# (1, 8, 0):0.0036288
+# (1, 8, 1):0.0373392
+# (1, 8, 2):0.1460232
+# (1, 8, 3):0.2832848
+# (1, 8, 4):0.29724
+# (1, 8, 5):0.1716432
+# (1, 8, 6):0.0527048
+# (1, 8, 7):0.0077328
+# (1, 8, 8):0.0004032
+# 
+# (1, 6, 0):0.00504
+# (1, 6, 1):0.05004
+# (1, 6, 2):0.1846
+# (1, 6, 3):0.3254
+# (1, 6, 4):0.2902
+# (1, 6, 5):0.12456
+# (1, 6, 6):0.02016
+# 
+# (1, 2, 0):0.72
+# (1, 2, 1):0.26
+# (1, 2, 2):0.02
+# 
+# 0.02*0.02016 = 0.00040320000000000004
+# (0.0077328-0.02016*0.26)/0.02 = 0.12455999999999995
+# (0.0527048-0.02016*0.72-0.12456*0.26)/0.02 = 0.2902000000000002
+# =============================================================================
+
+
+# =============================================================================
+# class Solution(object):
+#     def __init__(self, probList):
+#         self.probList = probList
+#         self.length = len(probList)
+#         self.dic = {}
+#         for i in xrange(1,self.length+1):
+#             self.dic[(i,1,1)] = probList[i-1]
+#             self.dic[(i,1,0)] = 1 - probList[i-1]
+#             
+#     def getResult(self):
+#         self.merge(1,self.length)
+#         return self.dic
+#     
+#     def merge(self,position,length):
+#         if length == 1:
+#             return
+#         else:
+#             leftLength = length // 2 # 左边的长度<=右边的长度
+#             rightLength = length - leftLength
+#             self.merge(position,leftLength)
+#             self.merge(position+leftLength,rightLength)
+#             for i in xrange(length+1):
+#                 self.dic[(position,length,i)] = 0
+#                 for j in xrange(leftLength+1):
+#                     if (position,leftLength,j) in self.dic and (position+leftLength,rightLength,i-j) in self.dic:
+#                         self.dic[(position,length,i)] += self.dic[(position,leftLength,j)] * self.dic[(position+leftLength,rightLength,i-j)]
+#                         
+# s = Solution([0.6,0.7,0.8])
+# dic = s.getResult()
+# print dic
+# =============================================================================
 
 # [0.6,0.7,0.8] 验算正确
 # 0.6*0.7*0.2+0.6*0.3*0.8+0.4*0.7*0.8 = 0.452
