@@ -9,17 +9,21 @@ Created on Fri Sep  1 21:23:25 2017
 from time import time
 
 class Solution(object):            
-    def getResult(self, probList):
+    def getDic(self, probList):
         self.probList = probList
         self.length = len(probList)
-        if self.length == 0:
-            return 1
         self.dic = {}
         for i in xrange(1,self.length+1):
             self.dic[(i,1,1)] = probList[i-1]
             self.dic[(i,1,0)] = 1 - probList[i-1]
         self.merge(1,self.length)
-        return self.dic
+        
+        dicAfterDel = {}
+        for i in xrange(self.length+1):
+            dicAfterDel[(1,self.length,i)] = self.dic[(1,self.length,i)]
+        del self.dic
+        
+        return dicAfterDel
     
     def merge(self,position,length):
         if length == 1:
@@ -34,26 +38,12 @@ class Solution(object):
                 for j in xrange(leftLength+1):
                     if (position,leftLength,j) in self.dic and (position+leftLength,rightLength,i-j) in self.dic:
                         self.dic[(position,length,i)] += self.dic[(position,leftLength,j)] * self.dic[(position+leftLength,rightLength,i-j)]
-   
-def test():                     
-    s = Solution()
-    
-    a = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-    lengthA = len(a)
-    dic = s.getResult(a)
-    dicFull = {}
-    for i in xrange(lengthA+1):
-        dicFull[(1,lengthA,i)] = dic[(1,lengthA,i)]
+                        
+    def getScore(self, dicFull, b):
+        lengthA = len(dicFull) - 1
         
-    for _ in xrange(276):
-        b = [0.1, 0.2]
         lengthB = len(b)
-        dic = s.getResult(b)
-        dicShort = {}
-        for i in xrange(lengthB+1):
-            dicShort[(1,lengthB,i)] = dic[(1,lengthB,i)]
-            
-        del dic
+        dicShort = self.getDic(b)
         
         resultDic = {}
         length = lengthA - lengthB
@@ -65,8 +55,44 @@ def test():
             
         resultDic.pop((1,length,length+1))
         resultDic.pop((1,length,length+2))
-                
-        print resultDic
+        
+        result = 0
+        for i in xrange(length+1):
+            result += 1/float(i+2) * resultDic[(1,length,i)]
+        return result * b[0] * b[1]
+        
+def test():                     
+    s = Solution()
+    
+    a = [0.5, 0.6, 0.7]
+    dicFull = s.getDic(a)
+        
+    print s.getScore(dicFull, [0.6, 0.7])
+    
+def testOrigin():                     
+    s = Solution()
+    
+    a = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+    lengthA = len(a)
+    dicFull = s.getDic(a)
+        
+    #for _ in xrange(276):
+    b = [0.1, 0.2]
+    lengthB = len(b)
+    dicShort = s.getDic(b)
+    
+    resultDic = {}
+    length = lengthA - lengthB
+    resultDic[(1,length,length+1)] = resultDic[(1,length,length+2)] = 0 # 避免后面if-else
+    for i in xrange(length,-1,-1):
+        resultDic[(1,length,i)] = (dicFull[(1,lengthA,i+2)] - \
+        resultDic[(1,length,i+1)] * dicShort[(1,2,1)] - \
+        resultDic[(1,length,i+2)] * dicShort[(1,2,0)]) / dicShort[(1,2,2)]
+        
+    resultDic.pop((1,length,length+1))
+    resultDic.pop((1,length,length+2))
+            
+    print resultDic
         
 def test2():                     
     s = Solution()
@@ -74,7 +100,7 @@ def test2():
     for _ in xrange(276):
         a = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
         lengthA = len(a)
-        dic = s.getResult(a)
+        dic = s.getDic(a)
         dicFull = {}
         for i in xrange(lengthA+1):
             dicFull[(1,lengthA,i)] = dic[(1,lengthA,i)]
@@ -82,7 +108,7 @@ def test2():
 t0 = time()
 test()
 t1 = time()
-print t1 - t0
+#print t1 - t0
 
 # =============================================================================
 # class Solution(object):            
