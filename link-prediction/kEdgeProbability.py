@@ -6,6 +6,8 @@ Created on Fri Sep  1 21:23:25 2017
 @author: zhangchi
 """
 
+from time import time
+
 class Solution(object):            
     def getResult(self, probList):
         self.probList = probList
@@ -17,10 +19,7 @@ class Solution(object):
             self.dic[(i,1,1)] = probList[i-1]
             self.dic[(i,1,0)] = 1 - probList[i-1]
         self.merge(1,self.length)
-        result = 0
-        for i in xrange(self.length+1):
-            result += 1/float(i+2) * self.dic[(1,self.length,i)]
-        return self.dic, result
+        return self.dic
     
     def merge(self,position,length):
         if length == 1:
@@ -38,15 +37,97 @@ class Solution(object):
    
 def test():                     
     s = Solution()
-    a = [0.5]
-    dic, result = s.getResult(a)
-    for i in xrange(len(a)+1):
-        print str((1,len(a),i)) + ":" + str(dic[(1,len(a),i)])
-    print result
     
+    a = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+    lengthA = len(a)
+    dic = s.getResult(a)
+    dicFull = {}
+    for i in xrange(lengthA+1):
+        dicFull[(1,lengthA,i)] = dic[(1,lengthA,i)]
+        
+    for _ in xrange(276):
+        b = [0.1, 0.2]
+        lengthB = len(b)
+        dic = s.getResult(b)
+        dicShort = {}
+        for i in xrange(lengthB+1):
+            dicShort[(1,lengthB,i)] = dic[(1,lengthB,i)]
+            
+        del dic
+        
+        resultDic = {}
+        length = lengthA - lengthB
+        resultDic[(1,length,length+1)] = resultDic[(1,length,length+2)] = 0 # 避免后面if-else
+        for i in xrange(length,-1,-1):
+            resultDic[(1,length,i)] = (dicFull[(1,lengthA,i+2)] - \
+            resultDic[(1,length,i+1)] * dicShort[(1,2,1)] - \
+            resultDic[(1,length,i+2)] * dicShort[(1,2,0)]) / dicShort[(1,2,2)]
+            
+        resultDic.pop((1,length,length+1))
+        resultDic.pop((1,length,length+2))
+                
+        print resultDic
+        
+def test2():                     
+    s = Solution()
+    
+    for _ in xrange(276):
+        a = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+        lengthA = len(a)
+        dic = s.getResult(a)
+        dicFull = {}
+        for i in xrange(lengthA+1):
+            dicFull[(1,lengthA,i)] = dic[(1,lengthA,i)]
+
+t0 = time()
 test()
+t1 = time()
+print t1 - t0
 
 # =============================================================================
+# class Solution(object):            
+#     def getResult(self, probList):
+#         self.probList = probList
+#         self.length = len(probList)
+#         if self.length == 0:
+#             return 1
+#         self.dic = {}
+#         for i in xrange(1,self.length+1):
+#             self.dic[(i,1,1)] = probList[i-1]
+#             self.dic[(i,1,0)] = 1 - probList[i-1]
+#         self.merge(1,self.length)
+#         result = 0
+#         for i in xrange(self.length+1):
+#             result += 1/float(i+2) * self.dic[(1,self.length,i)]
+#         return self.dic, result
+#     
+#     def merge(self,position,length):
+#         if length == 1:
+#             return
+#         else:
+#             leftLength = length // 2 # 左边的长度<=右边的长度
+#             rightLength = length - leftLength
+#             self.merge(position,leftLength)
+#             self.merge(position+leftLength,rightLength)
+#             for i in xrange(length+1):
+#                 self.dic[(position,length,i)] = 0
+#                 for j in xrange(leftLength+1):
+#                     if (position,leftLength,j) in self.dic and (position+leftLength,rightLength,i-j) in self.dic:
+#                         self.dic[(position,length,i)] += self.dic[(position,leftLength,j)] * self.dic[(position+leftLength,rightLength,i-j)]
+#    
+# def test():                     
+#     s = Solution()
+#     a = [0.5]
+#     dic, result = s.getResult(a)
+#     for i in xrange(len(a)+1):
+#         print str((1,len(a),i)) + ":" + str(dic[(1,len(a),i)])
+#     print result
+#     
+# test()
+# =============================================================================
+
+# =============================================================================
+# [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 # (1, 8, 0):0.0036288
 # (1, 8, 1):0.0373392
 # (1, 8, 2):0.1460232
