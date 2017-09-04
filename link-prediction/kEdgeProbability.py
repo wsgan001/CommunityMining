@@ -71,7 +71,7 @@ class Solution(object):
     
     def getScoreV2(self, probList, b): # 有些精度还是不能保证
         if len(probList) == 0:
-            result = 1
+            result = 0.5
         else:
             resultDic = self.getDic(probList)
             
