@@ -120,6 +120,24 @@ def common_neighbor(G,dic,mode=0,para=1):
                         probList.append(G[node][item]['prob'])
                 #print probList
                 result += s.getScoreV2(probList,[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+# =============================================================================
+#                 # 看看这个近似有没有问题
+#                 value1 = s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+#                 result += value1
+#                 probList = []
+#                 for item in G[node]:
+#                     if item != u and item != v:
+#                         probList.append(G[node][item]['prob'])
+#                 #print probList
+#                 value2 = s.getScoreV2(probList,[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+#                 if abs(value1-value2) > 0.001 and (value1 > 0.5 or value2 > 0.5):
+#                     print value1
+#                     print value2
+#                     print probList
+#                     print [G.edge[node][u]['prob'], G.edge[node][v]['prob']]
+#                     print "-----"
+# =============================================================================
+                
             else:
                 result += 1
         return result
