@@ -102,7 +102,7 @@ def common_neighbor(G,dic,mode=0,para=1):
             elif mode == 3:# 我认为的正确做法
                 result += dic[(node,u,v)]#((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) * sample(G,node,u,v)
             elif mode == 4:# 我认为的正确做法
-                #result += s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+                result += s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
 # =============================================================================
 #                 print "---"
 #                 probList = []
@@ -113,13 +113,15 @@ def common_neighbor(G,dic,mode=0,para=1):
 #                 print [G.edge[node][u]['prob'], G.edge[node][v]['prob']]
 #                 print s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
 #                 print ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / helper(G, node)
-# # =============================================================================
-                probList = []
-                for item in G[node]:
-                    if item != u and item != v:
-                        probList.append(G[node][item]['prob'])
-                #print probList
-                result += s.getScoreV2(probList,[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+# =============================================================================
+# =============================================================================
+#                 probList = []
+#                 for item in G[node]:
+#                     if item != u and item != v:
+#                         probList.append(G[node][item]['prob'])
+#                 #print probList
+#                 result += s.getScoreV2(probList,[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+# =============================================================================
 # =============================================================================
 #                 # 看看这个近似有没有问题
 #                 value1 = s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
@@ -283,21 +285,21 @@ def addProbNew(G,originG,prob=0.9,percent=0.15):
     return G
 
 
-G = nx.Graph()
-File = open("USAir.txt","r") # 0.1, 0.2, 0.3这附近比较好
-for line in File:
-    lineList = line.strip().split("    ")
-    nodeA = int(lineList[0])
-    nodeB = int(lineList[1])
-    G.add_edge(nodeA,nodeB)
-
 # =============================================================================
 # G = nx.Graph()
-# File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
+# File = open("USAir.txt","r") # 0.1, 0.2, 0.3这附近比较好
 # for line in File:
-#     edgeList = line.strip().split('\t')
-#     G.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
+#     lineList = line.strip().split("    ")
+#     nodeA = int(lineList[0])
+#     nodeB = int(lineList[1])
+#     G.add_edge(nodeA,nodeB)
 # =============================================================================
+
+G = nx.Graph()
+File = open("/Users/zhangchi/Desktop/cs690/CommunityMining/community-detection/TAP_core.txt")
+for line in File:
+    edgeList = line.strip().split('\t')
+    G.add_edge(edgeList[0],edgeList[1],prob=float(edgeList[2]))
     
 degree_count = Counter(sorted(nx.degree(G).values()))
 keys = degree_count.keys()
@@ -326,11 +328,11 @@ for para in paraList:
             
             newG = nx.Graph()
             for nodeA, nodeB in edgeTrain:
-                newG.add_edge(nodeA,nodeB)
+                #newG.add_edge(nodeA,nodeB)
                 #newG.add_edge(nodeA,nodeB,prob=1)
-                #newG.add_edge(nodeA,nodeB,prob=G.edge[nodeA][nodeB]['prob'])
+                newG.add_edge(nodeA,nodeB,prob=G.edge[nodeA][nodeB]['prob'])
             #newG = addProb(newG,prob=0.8,percent=0.2)
-            newG = addProbNew(newG,G,prob=0.8,percent=0.2)
+            #newG = addProbNew(newG,G,prob=0.8,percent=0.2)
             
 # =============================================================================
 #             print "start sample"
