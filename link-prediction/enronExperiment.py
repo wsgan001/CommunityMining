@@ -97,6 +97,8 @@ def common_neighbor(G,dic,mode=0,para=1):
         for node in nx.common_neighbors(G, u, v):
             if mode == 0: #错误做法的修订版（仍然有问题）
                 result += ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / helper(G, node)
+            elif mode == -1:
+                result += 1 / len(G[node])
             elif mode == 1:# 我最开始的错误做法
                 result += ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / len(G[node])
             elif mode == 2:# weight的做法
@@ -540,6 +542,32 @@ for para in paraList:
                 count += 1
             print float(right)/topK*1.0
             accuracyCompare3List.append(float(right)/topK*1.0)
+            
+            
+            preds = common_neighbor(newG,dic,-1)
+            #preds = LNB(newG,para,1)
+            #preds = LNBSample(newG,0,1)
+            #preds = common_neighbor(newG,mode,para)
+            #preds = nx.adamic_adar_index(newG)
+            #preds = nx.jaccard_coefficient(newG)
+            
+            result = []
+            for u, v, p in preds:
+                result.append([u,v,p])
+            result.sort(key=lambda x:x[2],reverse=True)
+            right = 0
+            count = 0
+            topK = 100
+            for nodeA, nodeB, score in result[:topK]:
+                if G.has_edge(nodeA,nodeB):
+                    right += 1
+                    #print str(count) + ": success"
+                else:
+                    #print str(count) + ": fail"
+                    pass
+                count += 1
+            print float(right)/topK*1.0
+            accuracyCompare4List.append(float(right)/topK*1.0)
             
 # =============================================================================
 #             # compare
