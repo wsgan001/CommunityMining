@@ -88,7 +88,7 @@ def helper(G, node):
         result += G[node][item]['prob']
     return result
 
-def common_neighbor(G,dic,mode=0,para=1):
+def common_neighbor_v0(G,dic,mode=0,para=1):
     # 3, 1, 0, 2
     def predict(u, v):
         result = 0
@@ -120,7 +120,7 @@ def common_neighbor_v1(G,dic,mode=0,para=1):
             elif mode == 3:# 我认为的正确做法
                 result += dic[(node,u,v)]#((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) * sample(G,node,u,v)
             elif mode == 4:# 我认为的正确做法
-                result += s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+                #result += s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
 # =============================================================================
 #                 print "---"
 #                 probList = []
@@ -132,14 +132,69 @@ def common_neighbor_v1(G,dic,mode=0,para=1):
 #                 print s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
 #                 print ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / helper(G, node)
 # =============================================================================
+                probList = []
+                for item in G[node]:
+                    if item != u and item != v:
+                        probList.append(G[node][item]['prob'])
+                #print probList
+                result += s.getScoreV2(probList,[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
 # =============================================================================
+#                 # 看看这个近似有没有问题
+#                 value1 = s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+#                 result += value1
 #                 probList = []
 #                 for item in G[node]:
 #                     if item != u and item != v:
 #                         probList.append(G[node][item]['prob'])
 #                 #print probList
-#                 result += s.getScoreV2(probList,[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+#                 value2 = s.getScoreV2(probList,[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+#                 if abs(value1-value2) > 0.001 and (value1 > 0.5 or value2 > 0.5):
+#                     print value1
+#                     print value2
+#                     print probList
+#                     print [G.edge[node][u]['prob'], G.edge[node][v]['prob']]
+#                     print "-----"
 # =============================================================================
+                
+            else:
+                result += 1
+        return result
+    return ((u, v, predict(u, v)) for u, v in nx.non_edges(G))
+
+def common_neighbor(G,dic,mode=0,para=1):
+    # 3, 1, 0, 2
+    def predict(u, v):
+        result = 0
+        for node in nx.common_neighbors(G, u, v):
+            if mode == 0: #错误做法的修订版（仍然有问题）
+                result += ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / helper(G, node)
+            elif mode == -1:
+                result += 1. / np.log10(len(G[node]))
+            elif mode == 1:# 我最开始的错误做法
+                result += ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / len(G[node])
+            elif mode == 2:# weight的做法
+                result += ((G.edge[node][u]['prob'] ** para) + (G.edge[node][v]['prob'] ** para)) / np.log10(helper(G, node)+1.)
+            elif mode == 3:# 我认为的正确做法
+                result += dic[(node,u,v)]#((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) * sample(G,node,u,v)
+            elif mode == 4:# 我认为的正确做法
+                #result += s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+# =============================================================================
+#                 print "---"
+#                 probList = []
+#                 for neighbor in G[node]:
+#                     probList.append(G[node][neighbor]['prob'])
+#                 print probList
+#                 print dic[node]
+#                 print [G.edge[node][u]['prob'], G.edge[node][v]['prob']]
+#                 print s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
+#                 print ((G.edge[node][u]['prob'] ** para) * (G.edge[node][v]['prob'] ** para)) / helper(G, node)
+# =============================================================================
+                probList = []
+                for item in G[node]:
+                    if item != u and item != v:
+                        probList.append(G[node][item]['prob'])
+                #print probList
+                result += s.getScoreV3(probList,[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
 # =============================================================================
 #                 # 看看这个近似有没有问题
 #                 value1 = s.getScore(dic[node],[G.edge[node][u]['prob'], G.edge[node][v]['prob']])
@@ -303,6 +358,19 @@ def addProbNew(G,originG,prob=0.9,percent=0.15):
     return G
 
 
+#G = nx.read_gml("football_edit.gml")
+
+# =============================================================================
+# G = nx.Graph()
+# File = open("C-elegans-frontal.txt","r") # 0.1, 0.2, 0.3这附近比较好
+# #File = open("USAir.txt","r") # 0.1, 0.2, 0.3这附近比较好
+# for line in File:
+#     lineList = line.strip().split(" ")
+#     nodeA = int(lineList[0])
+#     nodeB = int(lineList[1])
+#     G.add_edge(nodeA,nodeB)
+# =============================================================================
+
 # =============================================================================
 # G = nx.Graph()
 # File = open("USAir.txt","r") # 0.1, 0.2, 0.3这附近比较好
@@ -340,7 +408,7 @@ for para in paraList:
         accuracyCompare5List = []
         accuracyCompare6List = []
         accuracyCompare7List = []
-        testNumber = 40
+        testNumber = 25
         for _ in xrange(testNumber):
             edgeTrain, edgeTest = train_test_split(G.edges(), test_size=0.1)
             
