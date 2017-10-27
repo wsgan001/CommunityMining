@@ -81,6 +81,19 @@ class Solution(object):
             for i in xrange(length+1):
                 result += 1./float(i+2) * float(resultDic[(1,length,i)])
         return result * b[0] * b[1]
+    
+    def getScoreV3(self, probList, b): # 有些精度还是不能保证
+        if len(probList) == 0:
+            result = 1./np.log10(2)
+        else:
+            resultDic = self.getDic(probList)
+            
+            length = len(probList)
+            result = 0
+            #return resultDic
+            for i in xrange(length+1):
+                result += 1./np.log10(i+2) * float(resultDic[(1,length,i)])
+        return result * b[0] * b[1]
 
 # =============================================================================
 # class Solution(object):            
@@ -141,14 +154,17 @@ class Solution(object):
 def test():                     
     s = Solution()
     
-    a = [0.5,0.6,0.7]
+    a = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
     dic1 = s.getDic(a)
+    print dic1
     
     b = [0.5,0.6,0.7,0.8]
     dic2 = s.getDic(b)
         
     print s.getScore(dic1, [0.6,0.7])
     print s.getScore(dic2, [0.6,0.7])
+    
+test()
     
 def testOrigin():                     
     s = Solution()
