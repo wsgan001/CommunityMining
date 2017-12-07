@@ -269,7 +269,7 @@ def addProb(G,prob=0.9,percent=0.15):
     return G
 
 def main():
-    dataList = [0]
+    dataList = [2]
     for dataNumber in dataList:
         print "--------------------"
         print "dataNumber: " + str(dataNumber)
@@ -407,3 +407,33 @@ def main():
 
                
 R1ListSave, P1ListSave, F1ListSave, R2ListSave, P2ListSave, F2ListSave = main()
+
+import matplotlib.pyplot as plt
+
+fig = plt.figure()
+fig.set_size_inches(8, 5.5)
+ax = fig.add_subplot(111)
+ax.text(5.53, 1.00, u'No', fontsize=14)
+ax.text(5.5, 0.955, u'10%', fontsize=14)
+ax.text(5.5, 0.90, u'20%', fontsize=14)
+ax.text(5.5, 0.82, u'30%', fontsize=14)
+ax.text(5.5, 0.65, u'40%', fontsize=14)
+
+#ax.text(0.7, 0.53, u'Green lines stands for results run by uncertain R+K with Examination Phase', fontsize=14, color='green')
+#ax.text(0.7, 0.515, u'Blue lines stands for uncertain run by R+K without Examination Phase', fontsize=14, color='blue')
+
+ax.plot([1,2,3,4,5,6],F1ListSave[0],'go-',linewidth=1,label="uncertain R+K with Examination Phase")
+ax.plot([1,2,3,4,5,6],F1ListSave[1],'go--',linewidth=1)
+ax.plot([1,2,3,4,5,6],F1ListSave[2],'go-.',linewidth=1)
+ax.plot([1,2,3,4,5,6],F1ListSave[3],'go:',linewidth=1)
+ax.plot([1,2,3,4,5,6],F1ListSave[4],'g<-',linewidth=1)
+
+ax.plot([1,2,3,4,5,6],F2ListSave[0],'bo-',linewidth=1,label="uncertain R+K without Examination Phase")
+ax.plot([1,2,3,4,5,6],F2ListSave[1],'bo--',linewidth=1)
+ax.plot([1,2,3,4,5,6],F2ListSave[2],'bo-.',linewidth=1)
+ax.plot([1,2,3,4,5,6],F2ListSave[3],'bo:',linewidth=1)
+ax.plot([1,2,3,4,5,6],F2ListSave[4],'b<-',linewidth=1)
+
+ax.axis([0.5, 6.5, 0.5, 1.05])
+plt.legend()
+plt.draw()
