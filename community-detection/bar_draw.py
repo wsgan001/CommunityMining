@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 sns.set(style="dark")
 
 N = 5
@@ -21,9 +22,12 @@ ind = np.arange(N)  # the x locations for the groups
 width = 1./(M+1)     # the width of the bars
 
 fig, ax = plt.subplots()
+fig.set_size_inches(7, 5.5)
 
-men_means = (20, 35, 30, 35, 27)
-rects1 = ax.bar(ind, men_means, width)#, color='r')#, yerr=men_std)
+men_means = (20, 35, 20, 35, 27)
+rects1 = ax.bar(ind, men_means, width, color="white", edgecolor = "black", linewidth=2)#, color='r')#, yerr=men_std)
+ax.bar(ind, (18, 33, 25, 33, 26), width*0.7)#, alpha=0.5)
+ax.bar(ind, (14, 33, 28, 33, 26), width*0.3, color ='black')#, alpha=0.5)
 
 women_means = (25, 32, 34, 20, 25)
 rects2 = ax.bar(ind + width, women_means, width)#, color='y')#, yerr=women_std)
