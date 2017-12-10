@@ -249,7 +249,7 @@ def addProbOrigin(G):
         G.edge[a][b]['weight'] = 1
     return G
     
-def addProb(G,prob=0.9,percent=0.15):
+def addProbOld(G,prob=0.9,percent=0.15):
     for a,b in G.edges():
         value = 0.5 * np.random.randn() + prob
         while value <= 0 or value > 1:
@@ -271,6 +271,34 @@ def addProb(G,prob=0.9,percent=0.15):
             value = 0.5 * np.random.randn() + (1-prob)
     
         G.add_edge(nodeA,nodeB,prob=value,weight=1)
+        count += 1
+    return G
+
+def addProb(G,prob=0.9,percent=0.15):
+    for a,b in G.edges():
+        value = 0.5 * np.random.randn() + prob
+        while value <= 0 or value > 1:
+            value = 0.5 * np.random.randn() + prob
+        G.edge[a][b]['prob'] = value
+        #G.edge[a][b]['weight'] = 1
+    count = 0
+    countNumber = percent * len(G.edges())
+    nodeList = G.degree().keys()
+    edgeNumber = len(G.edges()) * 2
+    probabilityList = G.degree().values()
+    for i in xrange(len(probabilityList)):
+        probabilityList[i] = float(probabilityList[i])/float(edgeNumber)
+    while count < countNumber:
+        nodeA = np.random.choice(nodeList, p=probabilityList)
+        nodeB = np.random.choice(nodeList, p=probabilityList)
+        while nodeA == nodeB or nodeB in G[nodeA]:
+            nodeB = np.random.choice(nodeList, p=probabilityList)
+            
+        value = 0.5 * np.random.randn() + (1-prob)
+        while value <= 0 or value > 1:
+            value = 0.5 * np.random.randn() + (1-prob)
+    
+        G.add_edge(nodeA,nodeB,prob=value)#,weight=1)
         count += 1
     return G
     
@@ -384,11 +412,11 @@ def addProb(G,prob=0.9,percent=0.15):
 #     print '*******************'
 #==============================================================================
 def main():
-    dataList = [0]
+    dataList = [0,1,2]
     for dataNumber in dataList:
         print "--------------------"
         print "dataNumber: " + str(dataNumber)
-        percentList = [0.4,0.3,0.2,0.1,0]#[0,0.1,0.2,0.3,0.4]
+        percentList = [0,0.1,0.2,0.3,0.4]#[0.4]#[0.4,0.3,0.2,0.1,0]#[0,0.1,0.2,0.3,0.4]
         for percentNumber in percentList:
             print "percent: " + str(percentNumber)
             R1List = []
@@ -427,7 +455,7 @@ def main():
             R12List = []
             P12List = []
             F12List = []
-            testLength = 20
+            testLength = 100
             for testNumber in xrange(testLength):
                 #print testNumber
                 if dataNumber == 0:
@@ -878,5 +906,5 @@ def main():
 #             deltaTotal = len(tempSet) - deltaIn
 #             deltaPrime = len(tempSet.intersection(B))
 #==============================================================================
-#main()
+main()
     
