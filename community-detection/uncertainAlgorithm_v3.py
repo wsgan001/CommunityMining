@@ -15,12 +15,12 @@ from evaluate import calculateR, calculateUncertainR
 import evaluate
 import uncertainAlgorithm_v1 as uav1
 import os, sys
-import cmty
+#import cmty
 import myUncertain_v1 as mU1
 import paperReimplement as pR
 
-sys.path.append(os.getcwd()+'/python_mcl-master/mcl/')
-from mcl_clustering import mcl
+#sys.path.append(os.getcwd()+'/python_mcl-master/mcl/')
+#from mcl_clustering import mcl
 
 sys.path.append(os.getcwd()+'/python-louvain/')
 import community
@@ -652,18 +652,20 @@ def main2():
         RList2.append(calculateR(item,D2))
     print sum(RList2)/100.
 
-    a = nx.adjacency_matrix(uncertainG,weight='prob')
-    b = np.array(a.toarray())
-    M,cluster = mcl(b)
-    D3 = set()
-    for index,item in enumerate(M[0]):
-        if item > 0.98:
-            D3.add(index)
-    print D3
-    RList3 = []
-    for item in GList:
-        RList3.append(calculateR(item,D3))
-    print sum(RList3)/100.
+# =============================================================================
+#     a = nx.adjacency_matrix(uncertainG,weight='prob')
+#     b = np.array(a.toarray())
+#     M,cluster = mcl(b)
+#     D3 = set()
+#     for index,item in enumerate(M[0]):
+#         if item > 0.98:
+#             D3.add(index)
+#     print D3
+#     RList3 = []
+#     for item in GList:
+#         RList3.append(calculateR(item,D3))
+#     print sum(RList3)/100.
+# =============================================================================
 
 
 def main():
