@@ -863,7 +863,7 @@ def main():
             print "For 5 results (Latex): "
             print "& "+str(round(sum(R12List)*1.0/testLength,4))+'  & '+str(round(sum(P12List)*1.0/testLength,4))+'  & '+str(round(sum(F12List)*1.0/testLength,4))\
                +'  & '+str(round(sum(R3List)*1.0/testLength,4))+'  & '+str(round(sum(P3List)*1.0/testLength,4))+'  & '+str(round(sum(F3List)*1.0/testLength,4))\
-               +'  & '+str(round(sum(R1List)*1.0/testLength,4))+'  & '+str(round(sum(P1List)*1.0/testLength,4))+'  & '+str(round(sum(F1List)*1.0/testLength,4))\
+               +'  & '+str(round(sum(R2List)*1.0/testLength,4))+'  & '+str(round(sum(P2List)*1.0/testLength,4))+'  & '+str(round(sum(F2List)*1.0/testLength,4))\
                +'  & '+str(round(sum(R11List)*1.0/testLength,4))+'  & '+str(round(sum(P11List)*1.0/testLength,4))+'  & '+str(round(sum(F11List)*1.0/testLength,4))\
                +'  & '+str(round(sum(R10List)*1.0/testLength,4))+'  & '+str(round(sum(P10List)*1.0/testLength,4))+'  & '+str(round(sum(F10List)*1.0/testLength,4))\
                +'  \\\\ \hline'
@@ -877,7 +877,7 @@ def main():
             print "For 5 results (Graph): "
             print str(round(sum(R12List)*1.0/testLength,4))+'  '+str(round(sum(P12List)*1.0/testLength,4))+'  '+str(round(sum(F12List)*1.0/testLength,4))\
                +'  '+str(round(sum(R3List)*1.0/testLength,4))+'  '+str(round(sum(P3List)*1.0/testLength,4))+'  '+str(round(sum(F3List)*1.0/testLength,4))\
-               +'  '+str(round(sum(R1List)*1.0/testLength,4))+'  '+str(round(sum(P1List)*1.0/testLength,4))+'  '+str(round(sum(F1List)*1.0/testLength,4))\
+               +'  '+str(round(sum(R2List)*1.0/testLength,4))+'  '+str(round(sum(P2List)*1.0/testLength,4))+'  '+str(round(sum(F2List)*1.0/testLength,4))\
                +'  '+str(round(sum(R11List)*1.0/testLength,4))+'  '+str(round(sum(P11List)*1.0/testLength,4))+'  '+str(round(sum(F11List)*1.0/testLength,4))\
                +'  '+str(round(sum(R10List)*1.0/testLength,4))+'  '+str(round(sum(P10List)*1.0/testLength,4))+'  '+str(round(sum(F10List)*1.0/testLength,4))
 
